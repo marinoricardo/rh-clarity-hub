@@ -57,13 +57,13 @@ const AddWorker = () => {
 
   return (
     <AppLayout title="Adicionar Trabalhador" subtitle="Preencha os dados do novo colaborador">
-      <div className="max-w-4xl mx-auto animate-fade-in">
+      <div className="max-w-l mx-auto animate-fade-in">
         {/* Stepper */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-8 bg-card rounded-xl border border-border p-8">
+          <div className="flex items-end justify-between gap-4">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
-                <div className="stepper-step flex-1">
+              <div key={step.id} className="flex flex-1 flex-col items-center">
+                <div className="flex items-center w-full mb-4">
                   <div
                     className={`stepper-circle ${
                       currentStep > step.id
@@ -81,7 +81,7 @@ const AddWorker = () => {
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`stepper-line ${
+                      className={`flex-1 h-1 mx-2 rounded-full ${
                         currentStep > step.id
                           ? "stepper-line-completed"
                           : "stepper-line-pending"
@@ -89,18 +89,13 @@ const AddWorker = () => {
                     />
                   )}
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between mt-3">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`text-sm font-medium ${
-                  currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {step.title}
+                <div
+                  className={`text-sm font-medium text-center ${
+                    currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {step.title}
+                </div>
               </div>
             ))}
           </div>
@@ -113,8 +108,8 @@ const AddWorker = () => {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-semibold text-foreground mb-6">Dados Pessoais</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="md:col-span-2 lg:col-span-3 space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input id="nome" placeholder="Digite o nome completo" />
                 </div>
@@ -125,23 +120,135 @@ const AddWorker = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="documento">Documento de Identificação *</Label>
-                  <Input id="documento" placeholder="CPF / BI / Passaporte" />
+                  <Label htmlFor="nuit">NUIT *</Label>
+                  <Input id="nuit" placeholder="Número Único de Identificação" />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone *</Label>
-                  <Input id="telefone" placeholder="+55 11 99999-9999" />
+                  <Label htmlFor="genero">Gênero *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" placeholder="email@exemplo.com" />
+                  <Label htmlFor="estadoCivil">Estado Civil *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado civil" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                      <SelectItem value="casado">Casado(a)</SelectItem>
+                      <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                      <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                      <SelectItem value="uniao">União Estável</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="endereco">Endereço Completo</Label>
-                  <Textarea id="endereco" placeholder="Rua, número, bairro, cidade, estado, CEP" />
+                <div className="space-y-2">
+                  <Label htmlFor="tipoDocumento">Tipo de Documento *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bi">BI (Bilhete de Identidade)</SelectItem>
+                      <SelectItem value="rg">RG</SelectItem>
+                      <SelectItem value="passaporte">Passaporte</SelectItem>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnh">CNH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="numeroDocumento">Número do Documento *</Label>
+                  <Input id="numeroDocumento" placeholder="Digite o número" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="provincia">Província *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a província" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sofala">Sofala</SelectItem>
+                      <SelectItem value="inhambane">Inhambane</SelectItem>
+                      <SelectItem value="gaza">Gaza</SelectItem>
+                      <SelectItem value="maputo">Maputo</SelectItem>
+                      <SelectItem value="manica">Manica</SelectItem>
+                      <SelectItem value="tete">Tete</SelectItem>
+                      <SelectItem value="zambesia">Zambesia</SelectItem>
+                      <SelectItem value="nampula">Nampula</SelectItem>
+                      <SelectItem value="niassa">Niassa</SelectItem>
+                      <SelectItem value="cabo-delgado">Cabo Delgado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="distrito">Distrito *</Label>
+                  <Input id="distrito" placeholder="Digite o distrito" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="endereco">Endereço *</Label>
+                  <Input id="endereco" placeholder="Rua e número" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bairro">Bairro</Label>
+                  <Input id="bairro" placeholder="Digite o bairro" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="caixaPostal">Caixa Postal</Label>
+                  <Input id="caixaPostal" placeholder="Digite a caixa postal" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cidade">Cidade / Localidade *</Label>
+                  <Input id="cidade" placeholder="Digite a cidade" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="emailProfissional">Email Profissional *</Label>
+                  <Input id="emailProfissional" type="email" placeholder="email.profissional@empresa.com" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="emailAlternativo">Email Alternativo</Label>
+                  <Input id="emailAlternativo" type="email" placeholder="email.alternativo@exemplo.com" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contatoProfissional">Contacto Profissional</Label>
+                  <Input id="contatoProfissional" placeholder="+258 82 XXX XXXX" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contatoAlternativo">Contacto Alternativo</Label>
+                  <Input id="contatoAlternativo" placeholder="+258 82 XXX XXXX" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Cel / Tel *</Label>
+                  <Input id="telefone" placeholder="+258 82 XXX XXXX" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="funcao">Função *</Label>
+                  <Input id="funcao" placeholder="Digite a função" />
                 </div>
               </div>
             </div>
@@ -154,54 +261,18 @@ const AddWorker = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo *</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o cargo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="analista">Analista</SelectItem>
-                      <SelectItem value="desenvolvedor">Desenvolvedor</SelectItem>
-                      <SelectItem value="gerente">Gerente</SelectItem>
-                      <SelectItem value="operador">Operador</SelectItem>
-                      <SelectItem value="assistente">Assistente</SelectItem>
-                      <SelectItem value="tecnico">Técnico</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
+                  <Input id="dataAdmissao" type="date" />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="departamento">Departamento *</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o departamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rh">Recursos Humanos</SelectItem>
-                      <SelectItem value="ti">Tecnologia</SelectItem>
-                      <SelectItem value="vendas">Vendas</SelectItem>
-                      <SelectItem value="operacoes">Operações</SelectItem>
-                      <SelectItem value="financeiro">Financeiro</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="dataFim">Data de Fim</Label>
+                  <Input id="dataFim" type="date" />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="unidade">Unidade (UN) *</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a unidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sp">UN São Paulo</SelectItem>
-                      <SelectItem value="rj">UN Rio de Janeiro</SelectItem>
-                      <SelectItem value="bh">UN Belo Horizonte</SelectItem>
-                      <SelectItem value="ctba">UN Curitiba</SelectItem>
-                      <SelectItem value="poa">UN Porto Alegre</SelectItem>
-                      <SelectItem value="bsb">UN Brasília</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="inss">INSS</Label>
+                  <Input id="inss" placeholder="Digite o número do INSS" />
                 </div>
                 
                 <div className="space-y-2">
@@ -220,13 +291,63 @@ const AddWorker = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
-                  <Input id="dataAdmissao" type="date" />
+                  <Label htmlFor="nivelAcademico">Nível Acadêmico *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basico">Ensino Básico</SelectItem>
+                      <SelectItem value="secundario">Ensino Secundário</SelectItem>
+                      <SelectItem value="tecnico">Técnico</SelectItem>
+                      <SelectItem value="superior">Ensino Superior</SelectItem>
+                      <SelectItem value="mestrado">Mestrado</SelectItem>
+                      <SelectItem value="doutorado">Doutorado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="salario">Salário</Label>
+                  <Label htmlFor="area">Área *</Label>
+                  <Input id="area" placeholder="Digite a área" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="regiao">Região *</Label>
+                  <Input id="regiao" placeholder="Digite a região" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="pelouro">Pelouro</Label>
+                  <Input id="pelouro" placeholder="Digite o pelouro" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="unidadeOrganica">Unidade Orgânica *</Label>
+                  <Input id="unidadeOrganica" placeholder="Digite a unidade orgânica" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="setor">Setor *</Label>
+                  <Input id="setor" placeholder="Digite o setor" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="salario">Salário *</Label>
                   <Input id="salario" type="number" placeholder="0,00" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="inativo">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -237,26 +358,92 @@ const AddWorker = () => {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-semibold text-foreground mb-6">Documentos</h2>
               
-              {/* Upload Area */}
-              <div
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-                onClick={handleFileUpload}
-              >
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Upload className="w-8 h-8 text-primary" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* NUIT */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">NUIT *</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={handleFileUpload}
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-foreground">Clique para fazer upload</p>
+                    <p className="text-xs text-muted-foreground">PDF, JPG, PNG até 10MB</p>
+                  </div>
                 </div>
-                <p className="text-foreground font-medium mb-1">
-                  Clique para fazer upload ou arraste os arquivos
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  PDF, DOC, JPG, PNG até 10MB
-                </p>
+
+                {/* Documento de Identificação */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">Documento de Identificação *</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={handleFileUpload}
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-foreground">Clique para fazer upload</p>
+                    <p className="text-xs text-muted-foreground">PDF, JPG, PNG até 10MB</p>
+                  </div>
+                </div>
+
+                {/* Certificado de Habilitações Literárias */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">Certificado de Habilitações Literárias *</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={handleFileUpload}
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-foreground">Clique para fazer upload</p>
+                    <p className="text-xs text-muted-foreground">PDF, JPG, PNG até 10MB</p>
+                  </div>
+                </div>
+
+                {/* Curriculum */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">Curriculum *</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={handleFileUpload}
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-foreground">Clique para fazer upload</p>
+                    <p className="text-xs text-muted-foreground">PDF, DOC, DOCX até 10MB</p>
+                  </div>
+                </div>
+
+                {/* Outras Certificações */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">Outras Certificações</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={handleFileUpload}
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-foreground">Clique para fazer upload</p>
+                    <p className="text-xs text-muted-foreground">PDF, JPG, PNG até 10MB</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Uploaded Files */}
+              {/* Uploaded Files Summary */}
               {uploadedFiles.length > 0 && (
-                <div className="space-y-3">
-                  <Label>Documentos Anexados</Label>
+                <div className="space-y-3 mt-8 pt-6 border-t border-border">
+                  <Label className="text-base font-semibold">Documentos Carregados ({uploadedFiles.length})</Label>
                   {uploadedFiles.map((file, index) => (
                     <div
                       key={index}
@@ -285,13 +472,6 @@ const AddWorker = () => {
                   ))}
                 </div>
               )}
-
-              <div className="bg-info-light rounded-lg p-4">
-                <p className="text-sm text-info">
-                  <strong>Documentos recomendados:</strong> Documento de identificação, Comprovante de residência, 
-                  Certificados de formação, Carteira de trabalho, Foto 3x4.
-                </p>
-              </div>
             </div>
           )}
 

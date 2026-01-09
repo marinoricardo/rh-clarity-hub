@@ -33,8 +33,8 @@ const Login = () => {
               <Users className="w-8 h-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-sidebar-accent-foreground">RH Gestão</h1>
-              <p className="text-sidebar-muted text-sm">Sistema de Recursos Humanos</p>
+              <h1 className="text-3xl font-bold text-sidebar-accent-foreground">GueziRH</h1>
+              <p className="text-sidebar-muted text-sm">Sistema de Gestão de Trabalhadores da Maguezi</p>
             </div>
           </div>
           
@@ -73,11 +73,12 @@ const Login = () => {
               <Users className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">RH Gestão</h1>
+              <h1 className="text-2xl font-bold text-foreground">GueziRH</h1>
             </div>
           </div>
 
           <div className="text-center mb-8">
+            <img src="/images/logo.png" alt="Logo Guezi" className="mx-auto mb-4" width={120}/>
             <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo de volta</h2>
             <p className="text-muted-foreground">Entre com suas credenciais para acessar</p>
           </div>

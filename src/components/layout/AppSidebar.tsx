@@ -47,7 +47,7 @@ const AppSidebar = () => {
           </div>
           {!collapsed && (
             <div className="animate-fade-in">
-              <h1 className="text-lg font-bold text-sidebar-accent-foreground">RH Gestão</h1>
+              <h1 className="text-lg font-bold text-sidebar-accent-foreground">GueziRH</h1>
             </div>
           )}
         </div>
