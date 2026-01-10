@@ -20,6 +20,7 @@ import {
   DollarSign,
   Clock,
   Download,
+  Upload,
 } from "lucide-react";
 import {
   Table,
@@ -36,8 +37,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { WorkerService } from "@/data/services/worker.service";
 import { toast } from "@/hooks/use-toast";
+
+const motivosRemocao = [
+  { value: "pedido_demissao", label: "Pedido de demissão" },
+  { value: "fim_contrato", label: "Fim de contrato" },
+  { value: "desligamento", label: "Desligamento por justa causa" },
+  { value: "acordo", label: "Acordo mútuo" },
+  { value: "aposentadoria", label: "Aposentadoria" },
+  { value: "falecimento", label: "Falecimento" },
+  { value: "outro", label: "Outro" },
+];
 
 const WorkerDetails = () => {
   const { id } = useParams();
@@ -45,7 +63,11 @@ const WorkerDetails = () => {
   const [workerData, setWorkerData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [removeData, setRemoveData] = useState({
+    motivo: "",
+    anexo: null as File | null,
+  });
 
   const workerService = new WorkerService();
 
@@ -82,6 +104,24 @@ const WorkerDetails = () => {
     }
   };
 
+  const handleRemoveWorker = () => {
+    if (!removeData.motivo) {
+      toast({ 
+        title: "Erro", 
+        description: "Por favor, selecione o motivo da remoção.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({ 
+      title: "Trabalhador removido", 
+      description: "O trabalhador foi removido com sucesso." 
+    });
+    setRemoveDialogOpen(false);
+    navigate("/workers");
+  };
+
   if (loading) return <p className="text-center mt-10">Carregando dados do trabalhador...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
   if (!workerData) return null;
@@ -96,15 +136,11 @@ const WorkerDetails = () => {
             Voltar
           </Button>
           <div className="flex gap-3">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => navigate(`/workers/edit/${id}`)}>
               <Edit className="w-4 h-4 mr-2" />
               Editar
             </Button>
-            <Button variant="destructive">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Remover
-            </Button>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -113,20 +149,48 @@ const WorkerDetails = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Confirmar Remoção</DialogTitle>
+                  <DialogTitle>Remover Trabalhador</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <p className="text-muted-foreground">
-                    Tem certeza que deseja remover este trabalhador? Esta ação não pode ser desfeita.
+                    Tem certeza que deseja remover <strong>{workerData.full_name}</strong>? 
+                    Esta ação irá mover o trabalhador para a lista de removidos.
                   </p>
+                  
+                  <div className="space-y-2">
+                    <Label>Motivo da Remoção *</Label>
+                    <Select 
+                      value={removeData.motivo} 
+                      onValueChange={(value) => setRemoveData({...removeData, motivo: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o motivo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {motivosRemocao.map((motivo) => (
+                          <SelectItem key={motivo.value} value={motivo.value}>
+                            {motivo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Anexar documento (opcional)</Label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                      <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Clique para anexar (carta de demissão, acordo, etc.)
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    <Button variant="outline" onClick={() => setRemoveDialogOpen(false)}>
                       Cancelar
                     </Button>
-                    <Button variant="destructive" onClick={() => {
-                      toast({ title: "Trabalhador removido", description: "O trabalhador foi removido com sucesso." });
-                      navigate("/workers");
-                    }}>
+                    <Button variant="destructive" onClick={handleRemoveWorker}>
                       Confirmar Remoção
                     </Button>
                   </div>
@@ -173,7 +237,7 @@ const WorkerDetails = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{workerData.employment_data.organizational_unit}</span>
+                  <span className="text-muted-foreground">{workerData.employment_data?.organizational_unit}</span>
                 </div>
               </div>
             </div>
@@ -270,47 +334,47 @@ const WorkerDetails = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Pelouro</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.pelouro}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.pelouro}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Área</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.area}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.area}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Setor</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.sector}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.sector}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo de Contrato</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.contract_type}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.contract_type}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Admissão</p>
                   <p className="text-foreground font-medium">
-                    {new Date(workerData.employment_data.hire_date).toLocaleDateString("pt-BR")}
+                    {workerData.employment_data?.hire_date ? new Date(workerData.employment_data.hire_date).toLocaleDateString("pt-BR") : "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Data de Término do Contrato</p>
                   <p className="text-foreground font-medium">
-                    {new Date(workerData.employment_data.end_date).toLocaleDateString("pt-BR")}
+                    {workerData.employment_data?.end_date ? new Date(workerData.employment_data.end_date).toLocaleDateString("pt-BR") : "-"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Nível Acadêmico</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.academic_level}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.academic_level}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Região</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.region}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.region}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Salário</p>
-                  <p className="text-foreground font-medium">{Number(workerData.employment_data.salary).toFixed(2)} MZN</p>
+                  <p className="text-foreground font-medium">{Number(workerData.employment_data?.salary || 0).toFixed(2)} MZN</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="text-foreground font-medium">{workerData.employment_data.status}</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.status}</p>
                 </div>
               </div>
             </div>
@@ -327,14 +391,14 @@ const WorkerDetails = () => {
                 </Button>
               </div>
               <div className="space-y-3">
-                {Object.entries(workerData.documents).map(([key, url]: any, i) => {
+                {workerData.documents && Object.entries(workerData.documents).map(([key, url]: any, i) => {
                   if (key.endsWith("_url") && url) {
                     const label = key.replace("_url", "").replace(/_/g, " ");
                     return (
                       <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-4">
                         <div className="flex items-center gap-3">
                           <FileText className="w-5 h-5 text-primary" />
-                          <span className="text-foreground">{label}</span>
+                          <span className="text-foreground capitalize">{label}</span>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => window.open(url, "_blank")}>
                           <Download className="w-4 h-4" />
@@ -356,19 +420,24 @@ const WorkerDetails = () => {
                     <TableHead>Data</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Motivo</TableHead>
+                    <TableHead>Anexo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workerData.attendances.map((p, i) => (
+                  {workerData.attendances?.map((p: any, i: number) => (
                     <TableRow key={i} className="table-row">
                       <TableCell className="font-medium">{p.date}</TableCell>
                       <TableCell>{getStatusBadge(p.status)}</TableCell>
                       <TableCell className="text-muted-foreground">{p.reason || "-"}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => window.open(p.attachment, "_blank")}>
-                          <Download className="w-4 h-4 mr-1" />
-                          Ver
-                        </Button>
+                        {p.attachment ? (
+                          <Button variant="ghost" size="sm" onClick={() => window.open(p.attachment, "_blank")}>
+                            <Download className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -389,7 +458,7 @@ const WorkerDetails = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workerData.contracts.map((c, i) => (
+                  {workerData.contracts?.map((c: any, i: number) => (
                     <TableRow key={i} className="table-row">
                       <TableCell className="font-medium">{c.contract_type}</TableCell>
                       <TableCell className="text-muted-foreground">{c.start_date}</TableCell>
@@ -413,7 +482,7 @@ const WorkerDetails = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workerData.performances.map((a, i) => (
+                  {workerData.performances?.map((a: any, i: number) => (
                     <TableRow key={i} className="table-row">
                       <TableCell className="font-medium">{a.perfomance_date}</TableCell>
                       <TableCell>{getStatusBadge(a.status)}</TableCell>

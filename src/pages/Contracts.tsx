@@ -17,15 +17,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, FileText, Eye, Trash2, AlertTriangle, Download } from "lucide-react";
+import { Search, FileText, Eye, Trash2, AlertTriangle, Download, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const contractsData = [
-  { id: 1, worker: "Maria Santos", tipo: "CLT", inicio: "15/03/2022", fim: "Indeterminado", estado: "Ativo" },
-  { id: 2, worker: "João Ferreira", tipo: "CLT", inicio: "22/07/2021", fim: "Indeterminado", estado: "Ativo" },
-  { id: 3, worker: "Ana Costa", tipo: "PJ", inicio: "10/01/2023", fim: "10/01/2024", estado: "A Expirar" },
-  { id: 4, worker: "Pedro Lima", tipo: "Temporário", inicio: "05/09/2023", fim: "05/03/2024", estado: "A Expirar" },
-  { id: 5, worker: "Carla Mendes", tipo: "Estágio", inicio: "18/11/2022", fim: "18/11/2023", estado: "Expirado" },
-  { id: 6, worker: "Lucas Oliveira", tipo: "CLT", inicio: "03/04/2021", fim: "Indeterminado", estado: "Ativo" },
+  { id: 1, nomeCompleto: "Maria Santos", unidadeOrganica: "UN São Paulo", funcao: "Analista de RH", tipoContrato: "CLT", dataFim: "Indeterminado", estado: "Ativo" },
+  { id: 2, nomeCompleto: "João Ferreira", unidadeOrganica: "UN Rio de Janeiro", funcao: "Desenvolvedor", tipoContrato: "CLT", dataFim: "Indeterminado", estado: "Ativo" },
+  { id: 3, nomeCompleto: "Ana Costa", unidadeOrganica: "UN Belo Horizonte", funcao: "Gerente de Vendas", tipoContrato: "PJ", dataFim: "10/01/2024", estado: "A Expirar" },
+  { id: 4, nomeCompleto: "Pedro Lima", unidadeOrganica: "UN São Paulo", funcao: "Contador", tipoContrato: "Temporário", dataFim: "05/03/2024", estado: "A Expirar" },
+  { id: 5, nomeCompleto: "Carla Mendes", unidadeOrganica: "UN Curitiba", funcao: "Designer", tipoContrato: "Estágio", dataFim: "18/11/2023", estado: "Expirado" },
+  { id: 6, nomeCompleto: "Lucas Oliveira", unidadeOrganica: "UN Porto Alegre", funcao: "Operador", tipoContrato: "CLT", dataFim: "Indeterminado", estado: "Ativo" },
 ];
 
 const Contracts = () => {
@@ -47,8 +53,9 @@ const Contracts = () => {
   };
 
   const filteredContracts = contractsData.filter((contract) => {
-    const matchesSearch = contract.worker.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTipo = filterTipo === "all" || contract.tipo === filterTipo;
+    const matchesSearch = contract.nomeCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.funcao.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTipo = filterTipo === "all" || contract.tipoContrato === filterTipo;
     const matchesEstado = filterEstado === "all" || contract.estado === filterEstado;
     return matchesSearch && matchesTipo && matchesEstado;
   });
@@ -103,7 +110,7 @@ const Contracts = () => {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Pesquisar trabalhador..."
+              placeholder="Pesquisar por nome ou função..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -139,12 +146,13 @@ const Contracts = () => {
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                <TableHead>Trabalhador</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Data Início</TableHead>
-                <TableHead>Data Fim</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>Nome Completo</TableHead>
+                <TableHead>Unidade Orgânica</TableHead>
+                <TableHead>Função</TableHead>
+                <TableHead>Tipo de Contrato</TableHead>
+                <TableHead>Data Fim do Contrato</TableHead>
+                <TableHead>Estado do Contrato</TableHead>
+                <TableHead className="text-right">Acção</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,27 +163,38 @@ const Contracts = () => {
                       <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-primary" />
                       </div>
-                      <span className="font-medium">{contract.worker}</span>
+                      <span className="font-medium">{contract.nomeCompleto}</span>
                     </div>
                   </TableCell>
+                  <TableCell className="text-muted-foreground">{contract.unidadeOrganica}</TableCell>
+                  <TableCell className="text-muted-foreground">{contract.funcao}</TableCell>
                   <TableCell>
-                    <span className="px-2 py-1 bg-muted rounded-md text-sm">{contract.tipo}</span>
+                    <span className="px-2 py-1 bg-muted rounded-md text-sm">{contract.tipoContrato}</span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{contract.inicio}</TableCell>
-                  <TableCell className="text-muted-foreground">{contract.fim}</TableCell>
+                  <TableCell className="text-muted-foreground">{contract.dataFim}</TableCell>
                   <TableCell>{getEstadoBadge(contract.estado)}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="iconSm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="iconSm">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="iconSm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="iconSm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver detalhes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Download className="w-4 h-4 mr-2" />
+                          Baixar contrato
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remover
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
