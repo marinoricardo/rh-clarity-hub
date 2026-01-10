@@ -9,6 +9,7 @@ import {
   ArrowRight,
   CalendarCheck,
   UserPlus,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from "recharts";
 
 const statsCards = [
@@ -71,6 +73,16 @@ const attendanceData = [
   { month: "Jun", presentes: 93, faltas: 7 },
 ];
 
+// Dados de fundos alocados por unidade orgânica
+const fundosAlocadosData = [
+  { unidade: "UN São Paulo", alocado: 500000, salarios: 425000 },
+  { unidade: "UN Rio de Janeiro", alocado: 320000, salarios: 260000 },
+  { unidade: "UN Belo Horizonte", alocado: 230000, salarios: 190000 },
+  { unidade: "UN Curitiba", alocado: 180000, salarios: 140000 },
+  { unidade: "UN Porto Alegre", alocado: 160000, salarios: 125000 },
+  { unidade: "UN Brasília", alocado: 130000, salarios: 100000 },
+];
+
 const departmentData = [
   { name: "Administrativo", value: 45 },
   { name: "Operações", value: 85 },
@@ -85,6 +97,7 @@ const COLORS = [
   "hsl(142, 72%, 42%)",
   "hsl(280, 65%, 60%)",
   "hsl(38, 92%, 50%)",
+  "hsl(0, 72%, 51%)",
 ];
 
 const recentActivities = [
@@ -93,6 +106,14 @@ const recentActivities = [
   { type: "evaluation", text: "Avaliação de desempenho de Ana Costa concluída", time: "3 horas atrás" },
   { type: "absence", text: "João Ferreira registrou falta justificada", time: "5 horas atrás" },
 ];
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "MZN",
+    minimumFractionDigits: 0,
+  }).format(value);
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -178,6 +199,61 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">Gestão de contratos</p>
             </div>
           </Button>
+        </div>
+
+        {/* Fundos Alocados por Unidade Orgânica */}
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Fundos Alocados por Unidade Orgânica</h3>
+                <p className="text-sm text-muted-foreground">Comparativo entre valores alocados e gastos com salários</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/financial")}>
+              Ver detalhes
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={fundosAlocadosData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" horizontal={true} vertical={false} />
+                <XAxis 
+                  type="number" 
+                  stroke="hsl(220, 10%, 50%)" 
+                  fontSize={12}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <YAxis 
+                  type="category" 
+                  dataKey="unidade" 
+                  stroke="hsl(220, 10%, 50%)" 
+                  fontSize={12}
+                  width={120}
+                />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    formatCurrency(value),
+                    name === "alocado" ? "Fundos Alocados" : "Gastos com Salários"
+                  ]}
+                  contentStyle={{
+                    backgroundColor: "hsl(0, 0%, 100%)",
+                    border: "1px solid hsl(220, 14%, 90%)",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend 
+                  formatter={(value) => value === "alocado" ? "Fundos Alocados" : "Gastos com Salários"}
+                />
+                <Bar dataKey="alocado" fill="hsl(29, 98%, 47%)" radius={[0, 4, 4, 0]} name="alocado" />
+                <Bar dataKey="salarios" fill="hsl(199, 89%, 48%)" radius={[0, 4, 4, 0]} name="salarios" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Charts Row */}

@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,20 +20,87 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Star, Download, Upload, FileText, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Search, Star, Download, Upload, FileText, Eye, Plus, ChevronRight, Calendar } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
-const evaluationsData = [
-  { id: 1, worker: "Maria Santos", periodo: "2023 - 2º Semestre", nota: "4.5", status: "Concluída" },
-  { id: 2, worker: "João Ferreira", periodo: "2023 - 2º Semestre", nota: "4.2", status: "Concluída" },
-  { id: 3, worker: "Ana Costa", periodo: "2023 - 2º Semestre", nota: "-", status: "Pendente" },
-  { id: 4, worker: "Pedro Lima", periodo: "2023 - 2º Semestre", nota: "-", status: "Em Avaliação" },
-  { id: 5, worker: "Carla Mendes", periodo: "2023 - 2º Semestre", nota: "3.8", status: "Concluída" },
-  { id: 6, worker: "Lucas Oliveira", periodo: "2023 - 2º Semestre", nota: "-", status: "Pendente" },
+// Dados de trabalhadores com suas avaliações
+const workersWithEvaluations = [
+  { 
+    id: 1, 
+    name: "Maria Santos", 
+    cargo: "Analista de RH",
+    evaluations: [
+      { id: 1, periodo: "2023 - 2º Semestre", nota: "4.5", status: "Concluída", data: "15/12/2023" },
+      { id: 2, periodo: "2023 - 1º Semestre", nota: "4.2", status: "Concluída", data: "15/06/2023" },
+      { id: 3, periodo: "2022 - 2º Semestre", nota: "3.9", status: "Concluída", data: "15/12/2022" },
+    ]
+  },
+  { 
+    id: 2, 
+    name: "João Ferreira", 
+    cargo: "Desenvolvedor",
+    evaluations: [
+      { id: 1, periodo: "2023 - 2º Semestre", nota: "4.2", status: "Concluída", data: "14/12/2023" },
+      { id: 2, periodo: "2023 - 1º Semestre", nota: "4.0", status: "Concluída", data: "14/06/2023" },
+    ]
+  },
+  { 
+    id: 3, 
+    name: "Ana Costa", 
+    cargo: "Gerente de Vendas",
+    evaluations: [
+      { id: 1, periodo: "2023 - 2º Semestre", nota: "-", status: "Pendente", data: "-" },
+    ]
+  },
+  { 
+    id: 4, 
+    name: "Pedro Lima", 
+    cargo: "Contador",
+    evaluations: [
+      { id: 1, periodo: "2023 - 2º Semestre", nota: "-", status: "Em Avaliação", data: "-" },
+      { id: 2, periodo: "2023 - 1º Semestre", nota: "3.8", status: "Concluída", data: "10/06/2023" },
+    ]
+  },
+  { 
+    id: 5, 
+    name: "Carla Mendes", 
+    cargo: "Designer",
+    evaluations: [
+      { id: 1, periodo: "2023 - 2º Semestre", nota: "3.8", status: "Concluída", data: "16/12/2023" },
+    ]
+  },
+  { 
+    id: 6, 
+    name: "Lucas Oliveira", 
+    cargo: "Operador",
+    evaluations: []
+  },
 ];
 
 const Evaluations = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState<any>(null);
+  const [newEvaluationData, setNewEvaluationData] = useState({
+    periodo: "",
+    nota: "",
+    observacoes: "",
+    anexo: null as File | null,
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -59,17 +129,40 @@ const Evaluations = () => {
     );
   };
 
-  const filteredData = evaluationsData.filter((item) => {
-    const matchesSearch = item.worker.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || item.status === filterStatus;
-    return matchesSearch && matchesStatus;
+  const filteredWorkers = workersWithEvaluations.filter((worker) => {
+    const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.cargo.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (filterStatus === "all") return matchesSearch;
+    
+    const hasStatus = worker.evaluations.some(e => e.status === filterStatus);
+    return matchesSearch && hasStatus;
   });
 
   const stats = {
-    total: evaluationsData.length,
-    concluidas: evaluationsData.filter(e => e.status === "Concluída").length,
-    pendentes: evaluationsData.filter(e => e.status === "Pendente").length,
-    emAvaliacao: evaluationsData.filter(e => e.status === "Em Avaliação").length,
+    total: workersWithEvaluations.length,
+    concluidas: workersWithEvaluations.filter(w => w.evaluations.some(e => e.status === "Concluída")).length,
+    pendentes: workersWithEvaluations.filter(w => w.evaluations.some(e => e.status === "Pendente")).length,
+    emAvaliacao: workersWithEvaluations.filter(w => w.evaluations.some(e => e.status === "Em Avaliação")).length,
+  };
+
+  const handleOpenNewEvaluation = (worker: any) => {
+    setSelectedWorker(worker);
+    setNewEvaluationData({
+      periodo: "",
+      nota: "",
+      observacoes: "",
+      anexo: null,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSaveEvaluation = () => {
+    toast({
+      title: "Avaliação registrada!",
+      description: `Nova avaliação de ${selectedWorker?.name} foi salva.`,
+    });
+    setDialogOpen(false);
   };
 
   return (
@@ -78,15 +171,15 @@ const Evaluations = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-card rounded-lg border border-border p-4">
-            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-sm text-muted-foreground">Trabalhadores</p>
             <p className="text-2xl font-bold text-foreground">{stats.total}</p>
           </div>
           <div className="bg-card rounded-lg border border-border p-4">
-            <p className="text-sm text-muted-foreground">Concluídas</p>
+            <p className="text-sm text-muted-foreground">Com Avaliações Concluídas</p>
             <p className="text-2xl font-bold text-success">{stats.concluidas}</p>
           </div>
           <div className="bg-card rounded-lg border border-border p-4">
-            <p className="text-sm text-muted-foreground">Pendentes</p>
+            <p className="text-sm text-muted-foreground">Avaliações Pendentes</p>
             <p className="text-2xl font-bold text-warning">{stats.pendentes}</p>
           </div>
           <div className="bg-card rounded-lg border border-border p-4">
@@ -125,59 +218,176 @@ const Evaluations = () => {
           </Button>
         </div>
 
-        {/* Table */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="table-header">
-                <TableHead>Trabalhador</TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Nota</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((item) => (
-                <TableRow key={item.id} className="table-row">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-semibold text-primary">
-                          {item.worker.split(" ").map(n => n[0]).join("")}
+        {/* Workers with Evaluations List */}
+        <div className="space-y-4">
+          {filteredWorkers.map((worker) => (
+            <div key={worker.id} className="bg-card rounded-xl border border-border overflow-hidden">
+              <Accordion type="single" collapsible>
+                <AccordionItem value={`worker-${worker.id}`} className="border-0">
+                  <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary">
+                          {worker.name.split(" ").map(n => n[0]).join("")}
                         </span>
                       </div>
-                      <span className="font-medium">{item.worker}</span>
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-foreground">{worker.name}</h3>
+                        <p className="text-sm text-muted-foreground">{worker.cargo}</p>
+                      </div>
+                      <div className="flex items-center gap-4 mr-4">
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Avaliações</p>
+                          <p className="font-semibold text-foreground">{worker.evaluations.length}</p>
+                        </div>
+                        {worker.evaluations.length > 0 && (
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Última Nota</p>
+                            <div>{getNotaDisplay(worker.evaluations[0]?.nota || "-")}</div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{item.periodo}</TableCell>
-                  <TableCell>{getNotaDisplay(item.nota)}</TableCell>
-                  <TableCell>{getStatusBadge(item.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {item.status === "Pendente" ? (
-                        <Button variant="primaryLight" size="sm">
-                          <Upload className="w-4 h-4 mr-1" />
-                          Upload
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 pb-4">
+                    <div className="space-y-4">
+                      {/* Action Button */}
+                      <div className="flex justify-end">
+                        <Button onClick={() => handleOpenNewEvaluation(worker)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Nova Avaliação
                         </Button>
-                      ) : item.status === "Concluída" ? (
-                        <Button variant="ghost" size="sm">
-                          <Eye className="w-4 h-4 mr-1" />
-                          Ver
-                        </Button>
+                      </div>
+
+                      {/* Evaluations Table */}
+                      {worker.evaluations.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="table-header">
+                              <TableHead>Período</TableHead>
+                              <TableHead>Data</TableHead>
+                              <TableHead>Nota</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {worker.evaluations.map((evaluation) => (
+                              <TableRow key={evaluation.id} className="table-row">
+                                <TableCell className="font-medium">{evaluation.periodo}</TableCell>
+                                <TableCell className="text-muted-foreground">{evaluation.data}</TableCell>
+                                <TableCell>{getNotaDisplay(evaluation.nota)}</TableCell>
+                                <TableCell>{getStatusBadge(evaluation.status)}</TableCell>
+                                <TableCell className="text-right">
+                                  {evaluation.status === "Pendente" ? (
+                                    <Button variant="primaryLight" size="sm">
+                                      <Upload className="w-4 h-4 mr-1" />
+                                      Upload
+                                    </Button>
+                                  ) : evaluation.status === "Concluída" ? (
+                                    <Button variant="ghost" size="sm">
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      Ver
+                                    </Button>
+                                  ) : (
+                                    <Button variant="outline" size="sm">
+                                      <FileText className="w-4 h-4 mr-1" />
+                                      Avaliar
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       ) : (
-                        <Button variant="outline" size="sm">
-                          <FileText className="w-4 h-4 mr-1" />
-                          Avaliar
-                        </Button>
+                        <div className="text-center py-8 bg-muted/30 rounded-lg">
+                          <Star className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">Nenhuma avaliação registrada</p>
+                          <Button 
+                            variant="primaryLight" 
+                            size="sm" 
+                            className="mt-3"
+                            onClick={() => handleOpenNewEvaluation(worker)}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Criar primeira avaliação
+                          </Button>
+                        </div>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          ))}
         </div>
+
+        {/* New Evaluation Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Nova Avaliação - {selectedWorker?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>Período</Label>
+                <Select 
+                  value={newEvaluationData.periodo} 
+                  onValueChange={(value) => setNewEvaluationData({...newEvaluationData, periodo: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2024 - 1º Semestre">2024 - 1º Semestre</SelectItem>
+                    <SelectItem value="2023 - 2º Semestre">2023 - 2º Semestre</SelectItem>
+                    <SelectItem value="2023 - 1º Semestre">2023 - 1º Semestre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nota (0-5)</Label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="5" 
+                  step="0.1"
+                  placeholder="Ex: 4.5"
+                  value={newEvaluationData.nota}
+                  onChange={(e) => setNewEvaluationData({...newEvaluationData, nota: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações</Label>
+                <Textarea 
+                  placeholder="Comentários sobre o desempenho..."
+                  value={newEvaluationData.observacoes}
+                  onChange={(e) => setNewEvaluationData({...newEvaluationData, observacoes: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Anexar formulário de avaliação</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Clique para anexar o formulário preenchido</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEvaluation}>
+                  Salvar Avaliação
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
