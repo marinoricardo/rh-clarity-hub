@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,26 +11,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, ArrowLeft, ArrowRight, Upload, X, FileText } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { Check, ArrowLeft, ArrowRight, Upload, X, FileText, Loader2 } from "lucide-react";
 import { WorkerService } from "@/data/services/worker.service";
 import Swal from "sweetalert2";
 
-
-
 const steps = [
-  { id: 1, title: "Dados Pessoais" },
-  { id: 2, title: "Dados Empresariais" },
-  { id: 3, title: "Documentos" },
+  { id: 1, title: "Dados Pessoais", description: "Informações básicas" },
+  { id: 2, title: "Dados Empresariais", description: "Informações profissionais" },
+  { id: 3, title: "Documentos", description: "Ficheiros necessários" },
 ];
 
 const AddWorker = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  
   const [currentStep, setCurrentStep] = useState(1);
-  const [workerId, setWorkerId] = useState();
+  const [workerId, setWorkerId] = useState<number | string | undefined>(id);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const workerService = new WorkerService();
+  
   const [nuitFile, setNuitFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
@@ -75,15 +77,82 @@ const AddWorker = () => {
     status: "activo",
   });
 
+  // Fetch worker data if in edit mode
+  useEffect(() => {
+    if (isEditMode && id) {
+      fetchWorkerData();
+    }
+  }, [id, isEditMode]);
 
+  const fetchWorkerData = async () => {
+    setIsFetching(true);
+    try {
+      const worker = await workerService.show(id!);
+      // Populate personal data
+      setPersonalData({
+        full_name: worker.full_name || "",
+        date_of_birth: worker.date_of_birth || "",
+        tax_number: worker.tax_number || "",
+        gender: worker.gender || "",
+        marital_status: worker.marital_status || "",
+        document_type: worker.document_type || "",
+        document_number: worker.document_number || "",
+        province: worker.province || "",
+        district: worker.district || "",
+        address: worker.address || "",
+        neighborhood: worker.neighborhood || "",
+        postal_box: worker.postal_box || "",
+        city: worker.city || "",
+        work_email: worker.work_email || "",
+        alternative_email: worker.alternative_email || "",
+        work_contact: worker.work_contact || "",
+        alternative_contact: worker.alternative_contact || "",
+        phone: worker.phone || "",
+        job_function: worker.job_function || "",
+      });
+      // Populate company data
+      setCompanyData({
+        hire_date: worker.hire_date || "",
+        end_date: worker.end_date || "",
+        inss_number: worker.inss_number || "",
+        contract_type: worker.contract_type || "",
+        academic_level: worker.academic_level || "",
+        area: worker.area || "",
+        region: worker.region || "",
+        department: worker.department || "",
+        organic_unit: worker.organic_unit || "",
+        sector: worker.sector || "",
+        salary: worker.salary || "",
+        status: worker.status || "activo",
+      });
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro ao carregar",
+        text: err.message || "Não foi possível carregar os dados do trabalhador.",
+        confirmButtonText: "OK",
+      });
+      navigate("/workers");
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleNext = async () => {
-    if (currentStep == 1) {
+    setIsLoading(true);
+    
+    if (currentStep === 1) {
       try {
-        const response = await workerService.store(personalData)
-        console.log("PersonalData:", response);
-        setWorkerId(response.id)
-        setCurrentStep(currentStep + 1);
+        if (isEditMode && workerId) {
+          // Update existing worker
+          await workerService.store({ ...personalData, id: workerId });
+          setCurrentStep(currentStep + 1);
+        } else {
+          // Create new worker
+          const response = await workerService.store(personalData);
+          setWorkerId(response.id);
+          setCurrentStep(currentStep + 1);
+        }
       } catch (err: any) {
         Swal.fire({
           icon: "error",
@@ -91,31 +160,30 @@ const AddWorker = () => {
           text: err.message || "Ocorreu um erro ao registrar os dados pessoais.",
           confirmButtonText: "OK",
         });
-
-
       } finally {
+        setIsLoading(false);
       }
-      console.log(personalData)
+      return;
     }
-    if (currentStep == 2) {
+    
+    if (currentStep === 2) {
       try {
-        const response = await workerService.storeCompanyData(workerId, companyData)
-        console.log("PersonalData:", response);
+        await workerService.storeCompanyData(workerId!, companyData);
         setCurrentStep(currentStep + 1);
       } catch (err: any) {
         Swal.fire({
           icon: "error",
           title: "Erro no registro",
-          text: err.message || "Ocorreu um erro ao registrar os dados empresarias.",
+          text: err.message || "Ocorreu um erro ao registrar os dados empresariais.",
           confirmButtonText: "OK",
         });
-
-
       } finally {
+        setIsLoading(false);
       }
-      console.log(companyData)
+      return;
     }
-
+    
+    setIsLoading(false);
   };
 
   const handleChange = (e) => {
@@ -152,8 +220,8 @@ const AddWorker = () => {
 
 
   const handleSave = async () => {
+    setIsLoading(true);
     try {
-      // Cria objeto com os ficheiros do state
       const filesToUpload: Record<string, File> = {};
 
       if (nuitFile) filesToUpload["nuit_document"] = nuitFile;
@@ -162,44 +230,30 @@ const AddWorker = () => {
       if (cvFile) filesToUpload["cv"] = cvFile;
       if (otherFile) filesToUpload["other_certifications"] = otherFile;
 
-      const response = await workerService.uploadWorkerDocuments(
-        workerId,
-        filesToUpload
-      );
-
-      console.log("PersonalData:", response);
+      if (Object.keys(filesToUpload).length > 0) {
+        await workerService.uploadWorkerDocuments(workerId!, filesToUpload);
+      }
 
       Swal.fire({
         icon: "success",
-        title: "Upload realizado",
-        text: "Os documentos foram enviados com sucesso.",
+        title: isEditMode ? "Trabalhador actualizado!" : "Trabalhador adicionado!",
+        text: isEditMode 
+          ? "Os dados foram actualizados com sucesso." 
+          : "O cadastro foi realizado com sucesso.",
         confirmButtonText: "OK",
       });
 
-      // toast({
-      //   title: "Trabalhador adicionado!",
-      //   description: "O cadastro foi realizado com sucesso.",
-      // });
       navigate("/workers");
     } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Erro no registro",
-        text:
-          err.message ||
-          "Ocorreu um erro ao registrar os documentos do trabalhador.",
+        text: err.message || "Ocorreu um erro ao registrar os documentos do trabalhador.",
         confirmButtonText: "OK",
       });
     } finally {
-      console.log({
-        nuitFile,
-        idFile,
-        certificateFile,
-        cvFile,
-        otherFile,
-      });
+      setIsLoading(false);
     }
-
   };
 
   const handleFileUpload = () => {
@@ -211,46 +265,73 @@ const AddWorker = () => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
+  if (isFetching) {
+    return (
+      <AppLayout 
+        title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"} 
+        subtitle="Carregando dados..."
+      >
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
-    <AppLayout title="Adicionar Trabalhador" subtitle="Preencha os dados do novo colaborador">
-      <div className="max-w-l mx-auto animate-fade-in">
-        {/* Stepper */}
-        <div className="mb-8 bg-card rounded-xl border border-border p-8">
-          <div className="flex items-end justify-between gap-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex flex-1 flex-col items-center">
-                <div className="flex items-center w-full mb-4">
+    <AppLayout 
+      title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"} 
+      subtitle={isEditMode ? "Atualize os dados do colaborador" : "Preencha os dados do novo colaborador"}
+    >
+      <div className="max-w-6xl mx-auto animate-fade-in">
+        {/* Enhanced Stepper */}
+        <div className="mb-8">
+          <div className="relative">
+            {/* Progress Bar Background */}
+            <div className="absolute top-6 left-0 right-0 h-1 bg-border mx-16" />
+            {/* Progress Bar Fill */}
+            <div 
+              className="absolute top-6 left-0 h-1 bg-primary transition-all duration-500 mx-16"
+              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`, maxWidth: 'calc(100% - 8rem)' }}
+            />
+            
+            {/* Steps */}
+            <div className="relative flex justify-between">
+              {steps.map((step) => (
+                <div key={step.id} className="flex flex-col items-center flex-1">
+                  {/* Step Circle */}
                   <div
-                    className={`stepper-circle ${currentStep > step.id
-                      ? "stepper-circle-completed"
-                      : currentStep === step.id
-                        ? "stepper-circle-active"
-                        : "stepper-circle-pending"
-                      }`}
+                    className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shadow-md ${
+                      currentStep > step.id
+                        ? "bg-success text-success-foreground"
+                        : currentStep === step.id
+                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                        : "bg-card border-2 border-border text-muted-foreground"
+                    }`}
                   >
                     {currentStep > step.id ? (
-                      <Check className="w-5 h-5" />
+                      <Check className="w-6 h-6" />
                     ) : (
                       step.id
                     )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`flex-1 h-1 mx-2 rounded-full ${currentStep > step.id
-                        ? "stepper-line-completed"
-                        : "stepper-line-pending"
-                        }`}
-                    />
-                  )}
+                  
+                  {/* Step Labels */}
+                  <div className="mt-4 text-center">
+                    <p className={`font-semibold transition-colors ${
+                      currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                    }`}>
+                      {step.title}
+                    </p>
+                    <p className={`text-xs mt-1 transition-colors ${
+                      currentStep >= step.id ? "text-muted-foreground" : "text-muted-foreground/60"
+                    }`}>
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
-                <div
-                  className={`text-sm font-medium text-center ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                    }`}
-                >
-                  {step.title}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -752,20 +833,28 @@ const AddWorker = () => {
             <Button
               variant="outline"
               onClick={() => currentStep === 1 ? navigate("/workers") : handlePrevious()}
+              disabled={isLoading}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {currentStep === 1 ? "Cancelar" : "Anterior"}
             </Button>
 
             {currentStep < 3 ? (
-              <Button onClick={handleNext}>
-                Próximo
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button onClick={handleNext} disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
+                {isLoading ? "Salvando..." : "Próximo"}
+                {!isLoading && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             ) : (
-              <Button onClick={handleSave}>
-                <Check className="w-4 h-4 mr-2" />
-                Salvar Trabalhador
+              <Button onClick={handleSave} disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                {isLoading ? "Salvando..." : (isEditMode ? "Atualizar Trabalhador" : "Salvar Trabalhador")}
               </Button>
             )}
           </div>
