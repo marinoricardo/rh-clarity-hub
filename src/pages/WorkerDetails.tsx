@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
@@ -35,6 +37,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { WorkerService } from "@/data/services/worker.service";
+import { toast } from "@/hooks/use-toast";
 
 const WorkerDetails = () => {
   const { id } = useParams();
@@ -101,7 +104,7 @@ const WorkerDetails = () => {
               <Trash2 className="w-4 h-4 mr-2" />
               Remover
             </Button>
-            <Dialog open={true} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -110,27 +113,21 @@ const WorkerDetails = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Remover Trabalhador</DialogTitle>
+                  <DialogTitle>Confirmar Remoção</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Tipo</Label>
-                    <Input placeholder="Ex: Folha, Benefícios, Bonificação" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Valor (R$)</Label>
-                    <Input type="number" placeholder="0,00" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Data</Label>
-                    <Input type="date" />
-                  </div>
+                  <p className="text-muted-foreground">
+                    Tem certeza que deseja remover este trabalhador? Esta ação não pode ser desfeita.
+                  </p>
                   <div className="flex justify-end gap-3 pt-4">
                     <Button variant="outline" onClick={() => setDialogOpen(false)}>
                       Cancelar
                     </Button>
-                    <Button onClick={handleAddValue}>
-                      Salvar
+                    <Button variant="destructive" onClick={() => {
+                      toast({ title: "Trabalhador removido", description: "O trabalhador foi removido com sucesso." });
+                      navigate("/workers");
+                    }}>
+                      Confirmar Remoção
                     </Button>
                   </div>
                 </div>
