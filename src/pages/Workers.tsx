@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -25,28 +25,43 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const workersData = [
-  { id: 1, name: "Maria Santos", cargo: "Analista de RH", unidade: "UN São Paulo", estado: "Ativo", admissao: "15/03/2022" },
-  { id: 2, name: "João Ferreira", cargo: "Desenvolvedor", unidade: "UN Rio de Janeiro", estado: "Ativo", admissao: "22/07/2021" },
-  { id: 3, name: "Ana Costa", cargo: "Gerente de Vendas", unidade: "UN Belo Horizonte", estado: "Ativo", admissao: "10/01/2020" },
-  { id: 4, name: "Pedro Lima", cargo: "Contador", unidade: "UN São Paulo", estado: "Ativo", admissao: "05/09/2023" },
-  { id: 5, name: "Carla Mendes", cargo: "Designer", unidade: "UN Curitiba", estado: "Férias", admissao: "18/11/2022" },
-  { id: 6, name: "Lucas Oliveira", cargo: "Operador", unidade: "UN Porto Alegre", estado: "Ativo", admissao: "03/04/2021" },
-  { id: 7, name: "Juliana Rocha", cargo: "Assistente Admin", unidade: "UN São Paulo", estado: "Ativo", admissao: "27/06/2023" },
-  { id: 8, name: "Roberto Alves", cargo: "Técnico", unidade: "UN Brasília", estado: "Licença", admissao: "14/02/2020" },
-];
+import { WorkerService } from "@/data/services/worker.service";
 
 const Workers = () => {
   const navigate = useNavigate();
+  const [workersData, setWorkersData] = useState<any[]>([]); // agora dinâmico
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterUnidade, setFilterUnidade] = useState("all");
   const [filterEstado, setFilterEstado] = useState("all");
 
+  const workerService = new WorkerService();
+
+  // Busca workers automaticamente ao abrir o componente
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        setLoading(true);
+        const data = await workerService.index(); // chama a API
+        setWorkersData(data); // atualiza estado
+      } catch (err: any) {
+        setError(err.message || "Falha ao carregar trabalhadores");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkers();
+  }, []);
+
   const filteredWorkers = workersData.filter((worker) => {
-    const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      worker.cargo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesUnidade = filterUnidade === "all" || worker.unidade.includes(filterUnidade);
+    const matchesSearch =
+      worker.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      worker.job_function?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUnidade =
+      filterUnidade === "all" || worker.unidade?.includes(filterUnidade);
     const matchesEstado = filterEstado === "all" || worker.estado === filterEstado;
     return matchesSearch && matchesUnidade && matchesEstado;
   });
@@ -67,6 +82,9 @@ const Workers = () => {
   return (
     <AppLayout title="Trabalhadores" subtitle="Gerencie todos os colaboradores">
       <div className="space-y-6 animate-fade-in">
+        {loading && <p>Carregando trabalhadores...</p>}
+        {error && <p className="text-red-500">{error}</p>}
+
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-1 gap-3">
@@ -119,7 +137,7 @@ const Workers = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-card rounded-lg border border-border p-4">
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-bold text-foreground">{workersData.length}</p>
@@ -136,18 +154,17 @@ const Workers = () => {
             <p className="text-sm text-muted-foreground">Licença</p>
             <p className="text-2xl font-bold text-warning">{workersData.filter(w => w.estado === "Licença").length}</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                <TableHead className="w-[250px]">Nome</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Data Admissão</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead className="w-[250px]">Nome Completo</TableHead>
+                <TableHead>Unidade Organica</TableHead>
+                <TableHead>Função</TableHead>
+                <TableHead>Tipo Contrato</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -158,16 +175,16 @@ const Workers = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-sm font-semibold text-primary">
-                          {worker.name.split(" ").map(n => n[0]).join("")}
+                          {worker.full_name.split(" ").map(n => n[0]).join("")}
                         </span>
                       </div>
-                      <span className="font-medium text-foreground">{worker.name}</span>
+                      <span className="font-medium text-foreground">{worker.full_name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{worker.cargo}</TableCell>
-                  <TableCell className="text-muted-foreground">{worker.unidade}</TableCell>
-                  <TableCell className="text-muted-foreground">{worker.admissao}</TableCell>
-                  <TableCell>{getEstadoBadge(worker.estado)}</TableCell>
+                  <TableCell className="text-muted-foreground">{worker?.employment_data.organizational_unit}</TableCell>
+                  <TableCell className="text-muted-foreground">{worker.job_function}</TableCell>
+                  <TableCell className="text-muted-foreground">{worker?.employment_data.contract_type}</TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button
@@ -178,30 +195,14 @@ const Workers = () => {
                         <Eye className="w-4 h-4 mr-1" />
                         Ver
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="iconSm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/workers/${worker.id}`)}>
-                            Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Remover
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-          
-          {filteredWorkers.length === 0 && (
+
+          {filteredWorkers.length === 0 && !loading && (
             <div className="py-12 text-center">
               <p className="text-muted-foreground">Nenhum trabalhador encontrado.</p>
             </div>

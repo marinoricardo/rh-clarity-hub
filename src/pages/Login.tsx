@@ -4,23 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Users, Lock, Mail } from "lucide-react";
+import { AuthService } from "@/data/services/auth.service";
 
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
+    setError("");
+    const authService = new AuthService();
+    try {
+      const data = await authService.login(email, password);
+      console.log("User logged in:", data.user);
+      // redireciona para o dashboard
       navigate("/dashboard");
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex">
@@ -37,12 +47,12 @@ const Login = () => {
               <p className="text-sidebar-muted text-sm">Sistema de Gestão de Trabalhadores da Maguezi</p>
             </div>
           </div>
-          
+
           <h2 className="text-4xl font-bold text-sidebar-accent-foreground mb-4 leading-tight">
             Gerencie sua equipe<br />
             <span className="text-primary">com eficiência</span>
           </h2>
-          
+
           <p className="text-sidebar-foreground text-lg max-w-md">
             Plataforma completa para gestão de trabalhadores, presenças, contratos e avaliações de desempenho.
           </p>
@@ -78,12 +88,17 @@ const Login = () => {
           </div>
 
           <div className="text-center mb-8">
-            <img src="/images/logo.png" alt="Logo Guezi" className="mx-auto mb-4" width={120}/>
+            <img src="/images/logo.png" alt="Logo Guezi" className="mx-auto mb-4" width={120} />
             <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo de volta</h2>
             <p className="text-muted-foreground">Entre com suas credenciais para acessar</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg text-center">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground font-medium">
                 Email
@@ -136,9 +151,9 @@ const Login = () => {
               </button>
             </div>
 
-            <Button 
-              type="submit" 
-              size="lg" 
+            <Button
+              type="submit"
+              size="lg"
               className="w-full"
               disabled={isLoading}
             >
