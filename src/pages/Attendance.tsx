@@ -168,42 +168,13 @@ const Attendance = () => {
   return (
     <AppLayout title="Gestão de Presenças" subtitle="Controle de presenças e faltas">
       <div className="space-y-6 animate-fade-in">
-        {/* Stats */}
-        {/* <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg border border-border p-4">
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-          </div>
-          <div className="bg-card rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-success" />
-              <p className="text-sm text-muted-foreground">Presentes</p>
-            </div>
-            <p className="text-2xl font-bold text-success">{stats.presentes}</p>
-          </div>
-          <div className="bg-card rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2">
-              <X className="w-4 h-4 text-destructive" />
-              <p className="text-sm text-muted-foreground">Absentismo</p>
-            </div>
-            <p className="text-2xl font-bold text-destructive">{stats.absentismo}</p>
-          </div>
-          <div className="bg-card rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-warning" />
-              <p className="text-sm text-muted-foreground">Parcial</p>
-            </div>
-            <p className="text-2xl font-bold text-warning">{stats.parcial}</p>
-          </div>
-        </div> */}
-
         {/* Filters & Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-1 gap-3">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Pesquisar por código ou nome..."
+                placeholder="Pesquisar por nome..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -236,12 +207,58 @@ const Attendance = () => {
           </Button>
         </div>
 
-        {/* Table */}
+        {/* Workers Summary Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h3 className="font-semibold text-foreground">Resumo de Trabalhadores por Departamento</h3>
+          </div>
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                {/* <TableHead>Código</TableHead> */}
+                <TableHead>Nome Completo</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Unidade</TableHead>
+                <TableHead>Função</TableHead>
+                <TableHead>Tipo de Contrato</TableHead>
+                <TableHead>Salário</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workersData
+                .filter((w) => w.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map((worker) => (
+                  <TableRow key={worker.id} className="table-row">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-semibold text-primary">
+                            {worker.full_name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                          </span>
+                        </div>
+                        <span className="font-medium">{worker.full_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{worker.work_email || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.employment_data?.organic_unit || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.job_function || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.employment_data?.contract_type || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {worker.employment_data?.salary ? `${Number(worker.employment_data.salary).toLocaleString("pt-MZ")} MT` : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Attendance Records Table */}
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h3 className="font-semibold text-foreground">Registros de Presença</h3>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="table-header">
                 <TableHead>Nome do Trabalhador</TableHead>
                 <TableHead>Data Início</TableHead>
                 <TableHead>Data Fim</TableHead>
@@ -253,12 +270,11 @@ const Attendance = () => {
             <TableBody>
               {filteredData.map((item) => (
                 <TableRow key={item.id} className="table-row">
-                  {/* <TableCell className="font-mono text-sm">{item.codigo}</TableCell> */}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-xs font-semibold text-primary">
-                          {item.worker.full_name.split(" ").map(n => n[0]).join("")}
+                          {item.worker.full_name.split(" ").map((n: string) => n[0]).join("")}
                         </span>
                       </div>
                       <span className="font-medium">{item.worker.full_name}</span>
@@ -274,7 +290,6 @@ const Attendance = () => {
                     {item.attachment ? (
                       <Button variant="ghost" size="sm" onClick={() => window.open(item.attachment, "_blank")}>
                         <Download className="w-4 h-4 mr-1" />
-                        {/* {item.anexo} */}
                       </Button>
                     ) : (
                       <span className="text-muted-foreground">-</span>
