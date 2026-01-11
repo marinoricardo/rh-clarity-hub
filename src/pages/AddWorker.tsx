@@ -364,8 +364,8 @@ const AddWorker = () => {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-semibold text-foreground mb-6">Dados Pessoais</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="md:col-span-2 lg:col-span-3 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input id="nome" placeholder="Digite o nome completo" value={personalData.full_name} onChange={(e) => setPersonalData({ ...personalData, full_name: e.target.value })} />
                 </div>
@@ -513,7 +513,7 @@ const AddWorker = () => {
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-xl font-semibold text-foreground mb-6">Dados Empresariais</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="dataAdmissao">Data de Admissão *</Label>
                   <Input id="dataAdmissao" type="date" value={companyData.hire_date} onChange={(e) => setCompanyData({ ...companyData, hire_date: e.target.value })} />
