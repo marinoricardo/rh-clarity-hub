@@ -16,6 +16,7 @@ import Financial from "./pages/Financial";
 import RemovedWorkers from "./pages/RemovedWorkers";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import WorkerDetailsHist from "./pages/WorkerDetailsHist";
 
 const queryClient = new QueryClient();
 
@@ -33,11 +34,13 @@ const App = () => (
           <Route path="/workers/edit/:id" element={<AddWorker />} />
           <Route path="/workers/:id" element={<WorkerDetails />} />
           <Route path="/pending-workers" element={<PendingWorkers />} />
+          <Route path="/pending-workers/edit/:id" element={<AddWorker />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/evaluations" element={<Evaluations />} />
           <Route path="/financial" element={<Financial />} />
           <Route path="/removed-workers" element={<RemovedWorkers />} />
+          <Route path="/removed-workers/:id/history" element={<WorkerDetailsHist />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

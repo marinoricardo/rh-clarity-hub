@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -46,17 +46,18 @@ import {
 } from "@/components/ui/select";
 import { WorkerService } from "@/data/services/worker.service";
 import { toast } from "@/hooks/use-toast";
-import Swal from "sweetalert2";
 
 const motivosRemocao = [
-  { value: "Reforma", label: "Reforma" },
-  { value: "Falecimento", label: "Falecimento" },
-  { value: "Recisão", label: "Recisão" },
-  { value: "Despedimento", label: "Despedimento" },
-  { value: "Fim do Contrato", label: "Fim do Contrato" },
+  { value: "pedido_demissao", label: "Pedido de demissão" },
+  { value: "fim_contrato", label: "Fim de contrato" },
+  { value: "desligamento", label: "Desligamento por justa causa" },
+  { value: "acordo", label: "Acordo mútuo" },
+  { value: "aposentadoria", label: "Aposentadoria" },
+  { value: "falecimento", label: "Falecimento" },
+  { value: "outro", label: "Outro" },
 ];
 
-const WorkerDetails = () => {
+const WorkerDetailsHist = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [workerData, setWorkerData] = useState<any>(null);
@@ -64,12 +65,9 @@ const WorkerDetails = () => {
   const [error, setError] = useState("");
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [removeData, setRemoveData] = useState({
-    worker_id: "",
-    reason: "",
-    attachament: null as File | null,
+    motivo: "",
+    anexo: null as File | null,
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
 
   const workerService = new WorkerService();
 
@@ -106,53 +104,23 @@ const WorkerDetails = () => {
     }
   };
 
-  const handleRemoveWorker = async () => {
-    if (!removeData.reason) {
-      Swal.fire({
-        icon: "warning",
-        title: "Atenção",
-        text: "Por favor, selecione o motivo da remoção.",
-        confirmButtonText: "OK",
+  const handleRemoveWorker = () => {
+    if (!removeData.motivo) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione o motivo da remoção.",
+        variant: "destructive"
       });
       return;
     }
 
-    try {
-      const data = new FormData();
-
-      data.append("worker_id", id);
-      data.append("reason", removeData.reason);
-
-      if (removeData.attachament) {
-        data.append("attachament", removeData.attachament);
-      }
-
-      // 🔴 FECHA O DIALOG ANTES DO ALERT
-      setRemoveDialogOpen(false);
-
-      // chamada ao backend
-      await workerService.removedWorker(data);
-
-      await Swal.fire({
-        icon: "success",
-        title: "Trabalhador removido",
-        text: "O trabalhador foi removido com sucesso.",
-        confirmButtonText: "OK",
-      });
-
-      navigate("/workers");
-    } catch (error: any) {
-      console.error("Erro ao remover trabalhador:", error);
-
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: error?.message || "Erro ao remover trabalhador.",
-        confirmButtonText: "Fechar",
-      });
-    }
+    toast({
+      title: "Trabalhador removido",
+      description: "O trabalhador foi removido com sucesso."
+    });
+    setRemoveDialogOpen(false);
+    navigate("/workers");
   };
-
 
   if (loading) return <p className="text-center mt-10">Carregando dados do trabalhador...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -163,11 +131,11 @@ const WorkerDetails = () => {
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/workers")}>
+          <Button variant="ghost" onClick={() => navigate("/removed-workers")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
-          <div className="flex gap-3">
+          {/* <div className="flex gap-3">
             <Button variant="outline" onClick={() => navigate(`/workers/edit/${id}`)}>
               <Edit className="w-4 h-4 mr-2" />
               Editar
@@ -185,15 +153,15 @@ const WorkerDetails = () => {
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <p className="text-muted-foreground">
-                    Tem certeza que deseja remover <strong>{workerData.full_name}</strong>?
+                    Tem certeza que deseja remover <strong>{workerData.full_name}</strong>? 
                     Esta ação irá mover o trabalhador para a lista de removidos.
                   </p>
-
+                  
                   <div className="space-y-2">
                     <Label>Motivo da Remoção *</Label>
-                    <Select
-                      value={removeData.reason}
-                      onValueChange={(value) => setRemoveData({ ...removeData, reason: value })}
+                    <Select 
+                      value={removeData.motivo} 
+                      onValueChange={(value) => setRemoveData({...removeData, motivo: value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o motivo" />
@@ -207,41 +175,15 @@ const WorkerDetails = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Anexar documento
-                    </label>
-
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                    >
+                    <Label>Anexar documento (opcional)</Label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
                       <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-
-                      {removeData.attachament ? (
-                        <p className="text-sm font-medium text-foreground">
-                          📎 {removeData.attachament.name}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Clique para anexar o documento
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Clique para anexar (carta de demissão, acordo, etc.)
+                      </p>
                     </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-
-                        setRemoveData((prev) => ({
-                          ...prev,
-                          attachament: file,
-                        }));
-                      }}
-                    />
                   </div>
 
                   <div className="flex justify-end gap-3 pt-4">
@@ -255,7 +197,7 @@ const WorkerDetails = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
+          </div> */}
         </div>
 
         {/* Profile Card */}
@@ -562,4 +504,4 @@ const WorkerDetails = () => {
   );
 };
 
-export default WorkerDetails;
+export default WorkerDetailsHist;

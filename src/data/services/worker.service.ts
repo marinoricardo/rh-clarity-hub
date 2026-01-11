@@ -22,10 +22,41 @@ export class WorkerService {
     }
   }
 
+  // List of removed workers
+  async removedWorkers() {
+    try {
+      const response = await api.get("/removed-workers");
+      return response.data.removed_workers;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to fetch pending workers");
+    }
+  }
+
+  // Remove a worker
+  async removedWorker(workerData: Record<string, any>) {
+    try {
+      const response = await api.post("/removed-workers", workerData);
+      return response.data.removed_worker;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to create worker");
+    }
+  }
+
   // Create new worker
   async store(workerData: Record<string, any>) {
     try {
       const response = await api.post("/workers", workerData);
+      return response.data.data.worker;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to create worker");
+    }
+  }
+
+
+  // update worker
+  async update(workerId: number, workerData: Record<string, any>) {
+    try {
+      const response = await api.put(`/workers/${workerId}/update`, workerData);
       return response.data.data.worker;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to create worker");

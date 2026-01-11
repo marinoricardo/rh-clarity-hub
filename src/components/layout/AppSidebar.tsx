@@ -14,7 +14,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AuthService } from "@/data/services/auth.service";
+import { get } from "http";
+import { set } from "date-fns";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -22,15 +25,36 @@ const menuItems = [
   { icon: Clock, label: "Trabalhadores Pendentes", path: "/pending-workers" },
   { icon: Calendar, label: "Presenças", path: "/attendance" },
   { icon: FileText, label: "Contratos", path: "/contracts" },
-  { icon: Star, label: "Avaliações", path: "/evaluations" },
+  { icon: Star, label: "Desempenho", path: "/evaluations" },
   { icon: DollarSign, label: "Gestão Financeira", path: "/financial" },
   { icon: UserX, label: "Trabalhadores Removidos", path: "/removed-workers" },
-  { icon: Settings, label: "Configurações", path: "/settings" },
+  // { icon: Settings, label: "Configurações", path: "/settings" },
 ];
 
 const AppSidebar = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const authService = new AuthService();
+  
+  const handleLogout = async () => {  
+    await authService.logout();
+    // Additional logout handling if needed
+  }
+
+  useEffect(() => {
+  }, []);
+
+  const getMe = async () => {
+    try {
+      const user = await authService.me();
+      console.log("User info:", user);
+      setUser(user);
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+    }
+  }
 
   return (
     <aside
@@ -106,18 +130,18 @@ const AppSidebar = () => {
 
       {/* User & Logout */}
       <div className="p-3 border-t border-sidebar-border space-y-2">
-        {!collapsed && (
+        {/* {!collapsed && (
           <div className="px-3 py-2 bg-sidebar-accent/30 rounded-lg mb-2">
-            <p className="text-sm font-medium text-sidebar-accent-foreground">João Diretor</p>
-            <p className="text-xs text-sidebar-muted">Gestor RH</p>
+            <p className="text-sm font-medium text-sidebar-accent-foreground">{user?.name}</p>
+            <p className="text-xs text-sidebar-muted"></p>
           </div>
-        )}
+        )} */}
         <NavLink
           to="/"
           className="sidebar-item text-red-400 hover:bg-red-500/10 hover:text-red-300"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="animate-fade-in">Sair</span>}
+          {!collapsed && <span className="animate-fade-in">Terminar Sessão</span>}
         </NavLink>
       </div>
     </aside>

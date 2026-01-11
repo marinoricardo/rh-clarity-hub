@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,38 +27,70 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Calendar, Check, X, AlertTriangle, Upload, Plus, FileText, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { AttendanceService } from "@/data/services/attendance.service";
+import { WorkerService } from "@/data/services/worker.service";
+import Swal from "sweetalert2";
 
-const attendanceData = [
-  { id: 1, codigo: "TRB001", name: "Maria Santos", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
-  { id: 2, codigo: "TRB002", name: "João Ferreira", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
-  { id: 3, codigo: "TRB003", name: "Ana Costa", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Sim", observacoes: "Consulta médica", anexo: "atestado.pdf" },
-  { id: 4, codigo: "TRB004", name: "Pedro Lima", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Parcial", observacoes: "Saída antecipada", anexo: null },
-  { id: 5, codigo: "TRB005", name: "Carla Mendes", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
-  { id: 6, codigo: "TRB006", name: "Lucas Oliveira", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
-];
+
+// const attendanceData = [
+//   { id: 1, codigo: "TRB001", name: "Maria Santos", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
+//   { id: 2, codigo: "TRB002", name: "João Ferreira", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
+//   { id: 3, codigo: "TRB003", name: "Ana Costa", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Sim", observacoes: "Consulta médica", anexo: "atestado.pdf" },
+//   { id: 4, codigo: "TRB004", name: "Pedro Lima", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Parcial", observacoes: "Saída antecipada", anexo: null },
+//   { id: 5, codigo: "TRB005", name: "Carla Mendes", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
+//   { id: 6, codigo: "TRB006", name: "Lucas Oliveira", dataInicio: "09/01/2024", dataFim: "09/01/2024", absentismo: "Não", observacoes: "-", anexo: null },
+// ];
 
 const Attendance = () => {
+  const attendanceService = new AttendanceService();
+  const workerService = new WorkerService();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("2024-01-09");
   const [filterStatus, setFilterStatus] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    workerId: "",
-    dataInicio: "",
-    dataFim: "",
-    absentismo: "Não",
-    observacoes: "",
-    anexo: null as File | null,
+    worker_id: "",
+    start_date: "",
+    end_date: "",
+    status: "",
+    reason: "",
+    attachment: null as File | null,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [workersData, setWorkersData] = useState<any[]>([]); // agora dinâmico
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const data = await attendanceService.index(); // chama a API
+      const res = await workerService.index();
+      setWorkersData(res); // atualiza estado
+      setAttendanceData(data); // atualiza estado
+    } catch (err: any) {
+      setError(err.message || "Falha ao carregar trabalhadores");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getAbsentismoBadge = (absentismo: string) => {
     switch (absentismo) {
-      case "Não":
-        return <span className="badge-success">Não</span>;
-      case "Sim":
-        return <span className="badge-error">Sim</span>;
-      case "Parcial":
-        return <span className="badge-warning">Parcial</span>;
+      case "Ausente":
+        return <span className="badge-success">Ausente</span>;
+      case "Dispensa":
+        return <span className="badge-error">Dispensa</span>;
+      case "Presente":
+        return <span className="badge-warning">Presente</span>;
       default:
         return <span className="badge-info">{absentismo}</span>;
     }
@@ -66,45 +98,78 @@ const Attendance = () => {
 
   const handleOpenForm = () => {
     setFormData({
-      workerId: "",
-      dataInicio: "",
-      dataFim: "",
-      absentismo: "Não",
-      observacoes: "",
-      anexo: null,
+      worker_id: "",
+      start_date: "",
+      end_date: "",
+      status: "",
+      reason: "",
+      attachment: null,
     });
     setDialogOpen(true);
   };
 
-  const handleSaveAttendance = () => {
-    toast({
-      title: "Presença registrada!",
-      description: "O registo de presença foi salvo com sucesso.",
-    });
-    setDialogOpen(false);
+  const handleSaveAttendance = async () => {
+    try {
+      const data = new FormData();
+
+      data.append("worker_id", formData.worker_id);
+      data.append("start_date", formData.start_date);
+      data.append("end_date", formData.end_date);
+      data.append("status", formData.status);
+      data.append("reason", formData.reason);
+
+      if (formData.attachment) {
+        data.append("attachment", formData.attachment);
+      }
+
+      await attendanceService.store(data);
+      setDialogOpen(false);
+
+      Swal.fire({
+        icon: "success",
+        title: "Sucesso!",
+        text: "Presença registrada com sucesso.",
+        confirmButtonText: "OK",
+      });
+
+      fetchAllData();
+    } catch (error: any) {
+      console.error("Erro ao salvar presença:", error);
+      setDialogOpen(false);
+
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: error?.message || "Erro ao salvar presença.",
+        confirmButtonText: "Fechar",
+      });
+    }
   };
+
+
 
   const filteredData = attendanceData.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || 
-      (filterStatus === "presente" && item.absentismo === "Não") ||
-      (filterStatus === "absentismo" && item.absentismo !== "Não");
+    const matchesSearch = item.worker.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = filterStatus === "all" ||
+      (filterStatus === "Presente" && item.status === "Presente") ||
+      (filterStatus === "Ausente" && item.status === "Ausente") ||
+      (filterStatus === "Dispensa" && item.status === "Dispensa");
     return matchesSearch && matchesStatus;
   });
+  // const filteredData = attendanceData;
 
-  const stats = {
-    total: attendanceData.length,
-    presentes: attendanceData.filter(a => a.absentismo === "Não").length,
-    absentismo: attendanceData.filter(a => a.absentismo === "Sim").length,
-    parcial: attendanceData.filter(a => a.absentismo === "Parcial").length,
-  };
+  // const stats = {
+  //   total: attendanceData.length,
+  //   presentes: attendanceData.filter(a => a.absentismo === "Não").length,
+  //   absentismo: attendanceData.filter(a => a.absentismo === "Sim").length,
+  //   parcial: attendanceData.filter(a => a.absentismo === "Parcial").length,
+  // };
 
   return (
     <AppLayout title="Gestão de Presenças" subtitle="Controle de presenças e faltas">
       <div className="space-y-6 animate-fade-in">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-card rounded-lg border border-border p-4">
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-bold text-foreground">{stats.total}</p>
@@ -130,7 +195,7 @@ const Attendance = () => {
             </div>
             <p className="text-2xl font-bold text-warning">{stats.parcial}</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Filters & Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -159,8 +224,9 @@ const Attendance = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="presente">Presentes</SelectItem>
-                <SelectItem value="absentismo">Absentismo</SelectItem>
+                <SelectItem value="Ausente">Ausente</SelectItem>
+                <SelectItem value="Dispensa">Dispensa</SelectItem>
+                <SelectItem value="Presente">Presente</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -175,7 +241,7 @@ const Attendance = () => {
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                <TableHead>Código</TableHead>
+                {/* <TableHead>Código</TableHead> */}
                 <TableHead>Nome do Trabalhador</TableHead>
                 <TableHead>Data Início</TableHead>
                 <TableHead>Data Fim</TableHead>
@@ -187,28 +253,28 @@ const Attendance = () => {
             <TableBody>
               {filteredData.map((item) => (
                 <TableRow key={item.id} className="table-row">
-                  <TableCell className="font-mono text-sm">{item.codigo}</TableCell>
+                  {/* <TableCell className="font-mono text-sm">{item.codigo}</TableCell> */}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-xs font-semibold text-primary">
-                          {item.name.split(" ").map(n => n[0]).join("")}
+                          {item.worker.full_name.split(" ").map(n => n[0]).join("")}
                         </span>
                       </div>
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-medium">{item.worker.full_name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{item.dataInicio}</TableCell>
-                  <TableCell className="text-muted-foreground">{item.dataFim}</TableCell>
-                  <TableCell>{getAbsentismoBadge(item.absentismo)}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.start_date}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.end_date || "-"}</TableCell>
+                  <TableCell>{getAbsentismoBadge(item.status)}</TableCell>
                   <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                    {item.observacoes}
+                    {item.reason || "-"}
                   </TableCell>
                   <TableCell>
-                    {item.anexo ? (
-                      <Button variant="ghost" size="sm">
+                    {item.attachment ? (
+                      <Button variant="ghost" size="sm" onClick={() => window.open(item.attachment, "_blank")}>
                         <Download className="w-4 h-4 mr-1" />
-                        {item.anexo}
+                        {/* {item.anexo} */}
                       </Button>
                     ) : (
                       <span className="text-muted-foreground">-</span>
@@ -229,17 +295,17 @@ const Attendance = () => {
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label>Trabalhador</Label>
-                <Select 
-                  value={formData.workerId} 
-                  onValueChange={(value) => setFormData({...formData, workerId: value})}
+                <Select
+                  value={formData.worker_id}
+                  onValueChange={(value) => setFormData({ ...formData, worker_id: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o trabalhador" />
                   </SelectTrigger>
                   <SelectContent>
-                    {attendanceData.map(w => (
+                    {workersData.map(w => (
                       <SelectItem key={w.id} value={w.id.toString()}>
-                        {w.codigo} - {w.name}
+                        {w.id} - {w.full_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -249,54 +315,82 @@ const Attendance = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Data Início</Label>
-                  <Input 
-                    type="date" 
-                    value={formData.dataInicio}
-                    onChange={(e) => setFormData({...formData, dataInicio: e.target.value})}
+                  <Input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Data Fim</Label>
-                  <Input 
-                    type="date" 
-                    value={formData.dataFim}
-                    onChange={(e) => setFormData({...formData, dataFim: e.target.value})}
+                  <Input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Absentismo</Label>
-                <Select 
-                  value={formData.absentismo} 
-                  onValueChange={(value) => setFormData({...formData, absentismo: value})}
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Não">Não</SelectItem>
-                    <SelectItem value="Sim">Sim</SelectItem>
-                    <SelectItem value="Parcial">Parcial</SelectItem>
+                    <SelectItem value="Ausente">Ausente</SelectItem>
+                    <SelectItem value="Dispensa">Dispensa</SelectItem>
+                    <SelectItem value="Presente">Presente</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label>Observações</Label>
-                <Textarea 
+                <Textarea
                   placeholder="Descreva observações adicionais..."
-                  value={formData.observacoes}
-                  onChange={(e) => setFormData({...formData, observacoes: e.target.value})}
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>Anexar documento (opcional)</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                <label className="text-sm font-medium">
+                  Anexar documento (opcional)
+                </label>
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                >
                   <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Clique para anexar (atestado, justificativa, etc.)</p>
+
+                  {formData.attachment ? (
+                    <p className="text-sm font-medium text-foreground">
+                      📎 {formData.attachment.name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Clique para anexar (atestado, justificativa, etc.)
+                    </p>
+                  )}
                 </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      attachment: file,
+                    }));
+                  }}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4">

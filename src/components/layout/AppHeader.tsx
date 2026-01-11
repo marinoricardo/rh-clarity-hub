@@ -8,6 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AuthService } from "@/data/services/auth.service";
+import { useEffect, useState } from "react";
 
 interface AppHeaderProps {
   title: string;
@@ -15,6 +17,29 @@ interface AppHeaderProps {
 }
 
 const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
+
+  const [user, setUser] = useState(null);
+
+  const authService = new AuthService();
+  
+  const handleLogout = async () => {
+    await authService.logout();
+    // Additional logout handling if needed
+  }
+
+  useEffect(() => {
+    getMe();
+  }, []);
+
+  const getMe = async () => {
+    try {
+      const user = await authService.me();
+      console.log("User info:", user);
+      setUser(user);
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+    }
+  }
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
       {/* Page Title */}
@@ -45,21 +70,21 @@ const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-muted rounded-lg px-3 py-2 transition-colors">
               <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">JD</span>
+                <span className="text-sm font-semibold text-primary">{user?.name.split(" ").map(n => n[0]).join("")}</span>
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-foreground">João Diretor</p>
-                <p className="text-xs text-muted-foreground">Gestor RH</p>
+                <p className="text-sm font-medium text-foreground">{user?.name}</p>
+                <p className="text-xs text-muted-foreground"></p>
               </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
+              {/* <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" /> */}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          {/* <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem>Meu Perfil</DropdownMenuItem>
             <DropdownMenuItem>Preferências</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Sair</DropdownMenuItem>
-          </DropdownMenuContent>
+          </DropdownMenuContent> */}
         </DropdownMenu>
       </div>
     </header>

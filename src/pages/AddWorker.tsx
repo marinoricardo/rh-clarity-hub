@@ -14,6 +14,8 @@ import {
 import { Check, ArrowLeft, ArrowRight, Upload, X, FileText, Loader2 } from "lucide-react";
 import { WorkerService } from "@/data/services/worker.service";
 import Swal from "sweetalert2";
+import { CommonService } from "@/data/services/common.service";
+import { set } from "date-fns";
 
 const steps = [
   { id: 1, title: "Dados Pessoais", description: "Informações básicas" },
@@ -25,14 +27,29 @@ const AddWorker = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [workerId, setWorkerId] = useState<number | string | undefined>(id);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
+  const [commonData, setCommonData] = useState<{
+    areas: any[];
+    regiaos: any[];
+    pelouros: any[];
+    unidade_organicas: any[];
+    departamentos: any[];
+  }>({
+    areas: [],
+    regiaos: [],
+    pelouros: [],
+    unidade_organicas: [],
+    departamentos: [],
+  });
+
   const workerService = new WorkerService();
-  
+  const commonService = new CommonService();
+
   const [nuitFile, setNuitFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
@@ -79,10 +96,17 @@ const AddWorker = () => {
 
   // Fetch worker data if in edit mode
   useEffect(() => {
+    fetchAllCommonData();
     if (isEditMode && id) {
       fetchWorkerData();
     }
   }, [id, isEditMode]);
+
+  const fetchAllCommonData = async () => {
+    const res = await commonService.fetchCommonData();
+    setCommonData(res);
+    console.log("Common Data:", res);
+  }
 
   const fetchWorkerData = async () => {
     setIsFetching(true);
@@ -112,18 +136,18 @@ const AddWorker = () => {
       });
       // Populate company data
       setCompanyData({
-        hire_date: worker.hire_date || "",
-        end_date: worker.end_date || "",
-        inss_number: worker.inss_number || "",
-        contract_type: worker.contract_type || "",
-        academic_level: worker.academic_level || "",
-        area: worker.area || "",
-        region: worker.region || "",
-        department: worker.department || "",
-        organic_unit: worker.organic_unit || "",
-        sector: worker.sector || "",
-        salary: worker.salary || "",
-        status: worker.status || "activo",
+        hire_date: worker.employment_data?.hire_date || "",
+        end_date: worker.employment_data?.end_date || "",
+        inss_number: worker.employment_data?.inss_number || "",
+        contract_type: worker.employment_data?.contract_type || "",
+        academic_level: worker.employment_data?.academic_level || "",
+        area: worker.employment_data?.area || "",
+        region: worker.employment_data?.region || "",
+        department: worker.employment_data?.department || "",
+        organic_unit: worker.employment_data?.organic_unit || "",
+        sector: worker.employment_data?.sector || "",
+        salary: worker.employment_data?.salary || "",
+        status: worker.employment_data?.status || "activo",
       });
     } catch (err: any) {
       Swal.fire({
@@ -140,12 +164,13 @@ const AddWorker = () => {
 
   const handleNext = async () => {
     setIsLoading(true);
-    
+
     if (currentStep === 1) {
+      console.log("isEditMode:", isEditMode, "workerId:", workerId);
       try {
         if (isEditMode && workerId) {
           // Update existing worker
-          await workerService.store({ ...personalData, id: workerId });
+          await workerService.update(workerId as number, personalData);
           setCurrentStep(currentStep + 1);
         } else {
           // Create new worker
@@ -165,7 +190,7 @@ const AddWorker = () => {
       }
       return;
     }
-    
+
     if (currentStep === 2) {
       try {
         await workerService.storeCompanyData(workerId!, companyData);
@@ -182,7 +207,7 @@ const AddWorker = () => {
       }
       return;
     }
-    
+
     setIsLoading(false);
   };
 
@@ -237,8 +262,8 @@ const AddWorker = () => {
       Swal.fire({
         icon: "success",
         title: isEditMode ? "Trabalhador actualizado!" : "Trabalhador adicionado!",
-        text: isEditMode 
-          ? "Os dados foram actualizados com sucesso." 
+        text: isEditMode
+          ? "Os dados foram actualizados com sucesso."
           : "O cadastro foi realizado com sucesso.",
         confirmButtonText: "OK",
       });
@@ -267,8 +292,8 @@ const AddWorker = () => {
 
   if (isFetching) {
     return (
-      <AppLayout 
-        title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"} 
+      <AppLayout
+        title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"}
         subtitle="Carregando dados..."
       >
         <div className="flex items-center justify-center py-20">
@@ -279,35 +304,34 @@ const AddWorker = () => {
   }
 
   return (
-    <AppLayout 
-      title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"} 
+    <AppLayout
+      title={isEditMode ? "Editar Trabalhador" : "Adicionar Trabalhador"}
       subtitle={isEditMode ? "Atualize os dados do colaborador" : "Preencha os dados do novo colaborador"}
     >
-      <div className="max-w-6xl mx-auto animate-fade-in">
+      <div className="max-w-8xl mx-auto animate-fade-in">
         {/* Enhanced Stepper */}
         <div className="mb-8">
           <div className="relative">
             {/* Progress Bar Background */}
             <div className="absolute top-6 left-0 right-0 h-1 bg-border mx-16" />
             {/* Progress Bar Fill */}
-            <div 
+            <div
               className="absolute top-6 left-0 h-1 bg-primary transition-all duration-500 mx-16"
               style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`, maxWidth: 'calc(100% - 8rem)' }}
             />
-            
+
             {/* Steps */}
             <div className="relative flex justify-between">
               {steps.map((step) => (
                 <div key={step.id} className="flex flex-col items-center flex-1">
                   {/* Step Circle */}
                   <div
-                    className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shadow-md ${
-                      currentStep > step.id
-                        ? "bg-success text-success-foreground"
-                        : currentStep === step.id
+                    className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shadow-md ${currentStep > step.id
+                      ? "bg-success text-success-foreground"
+                      : currentStep === step.id
                         ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
                         : "bg-card border-2 border-border text-muted-foreground"
-                    }`}
+                      }`}
                   >
                     {currentStep > step.id ? (
                       <Check className="w-6 h-6" />
@@ -315,17 +339,15 @@ const AddWorker = () => {
                       step.id
                     )}
                   </div>
-                  
+
                   {/* Step Labels */}
                   <div className="mt-4 text-center">
-                    <p className={`font-semibold transition-colors ${
-                      currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                    }`}>
+                    <p className={`font-semibold transition-colors ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                      }`}>
                       {step.title}
                     </p>
-                    <p className={`text-xs mt-1 transition-colors ${
-                      currentStep >= step.id ? "text-muted-foreground" : "text-muted-foreground/60"
-                    }`}>
+                    <p className={`text-xs mt-1 transition-colors ${currentStep >= step.id ? "text-muted-foreground" : "text-muted-foreground/60"
+                      }`}>
                       {step.description}
                     </p>
                   </div>
@@ -379,11 +401,10 @@ const AddWorker = () => {
                       <SelectValue placeholder="Selecione o estado civil" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                      <SelectItem value="casado">Casado(a)</SelectItem>
-                      <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                      <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                      <SelectItem value="uniao">União Estável</SelectItem>
+                      <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                      <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                      <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                      <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -395,11 +416,10 @@ const AddWorker = () => {
                       <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bi">BI (Bilhete de Identidade)</SelectItem>
-                      <SelectItem value="rg">RG</SelectItem>
-                      <SelectItem value="passaporte">Passaporte</SelectItem>
-                      <SelectItem value="cpf">CPF</SelectItem>
-                      <SelectItem value="cnh">CNH</SelectItem>
+                      <SelectItem value="BI (Bilhete de Identidade)">BI (Bilhete de Identidade)</SelectItem>
+                      <SelectItem value="Carta de Condução">Carta de Condução</SelectItem>
+                      <SelectItem value="Passaporte">Passaporte</SelectItem>
+                      <SelectItem value="Cartão de Eleitor">Cartão de Eleitor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -516,10 +536,9 @@ const AddWorker = () => {
                       <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="clt">CLT</SelectItem>
-                      <SelectItem value="pj">PJ</SelectItem>
-                      <SelectItem value="temporario">Temporário</SelectItem>
-                      <SelectItem value="estagio">Estágio</SelectItem>
+                      <SelectItem value="Certo">Certo</SelectItem>
+                      <SelectItem value="Incerto">Incerto</SelectItem>
+                      <SelectItem value="Indeterminado">Indeterminado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -543,27 +562,78 @@ const AddWorker = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="area">Área *</Label>
-                  <Input id="area" placeholder="Digite a área" value={companyData.area} onChange={(e) => setCompanyData({ ...companyData, area: e.target.value })} />
+                  <Select value={companyData.area} onValueChange={(e) => setCompanyData({ ...companyData, area: e })} >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a área" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonData.areas.map((area) => (
+                        <SelectItem key={area.id} value={area.name}>
+                          {area.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="regiao">Região *</Label>
-                  <Input id="regiao" placeholder="Digite a região" value={companyData.region} onChange={(e) => setCompanyData({ ...companyData, region: e.target.value })} />
+                  <Label htmlFor="region">Região *</Label>
+                  <Select value={companyData.region} onValueChange={(e) => setCompanyData({ ...companyData, region: e })} >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a região" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonData.regiaos.map((regiao) => (
+                        <SelectItem key={regiao.id} value={regiao.name}>
+                          {regiao.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="pelouro">Pelouro</Label>
-                  <Input id="pelouro" placeholder="Digite o pelouro" value={companyData.department} onChange={(e) => setCompanyData({ ...companyData, department: e.target.value })} />
+                  <Label htmlFor="department">Pelouro *</Label>
+                  <Select value={companyData.department} onValueChange={(e) => setCompanyData({ ...companyData, department: e })} >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o pelouro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonData.pelouros.map((pelouro) => (
+                        <SelectItem key={pelouro.id} value={pelouro.name}>
+                          {pelouro.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="unidadeOrganica">Unidade Orgânica *</Label>
-                  <Input id="unidadeOrganica" placeholder="Digite a unidade orgânica" value={companyData.organic_unit} onChange={(e) => setCompanyData({ ...companyData, organic_unit: e.target.value })} />
+                  <Label htmlFor="organic_unit">Unidade Orgânica *</Label>
+                  <Select value={companyData.organic_unit} onValueChange={(e) => setCompanyData({ ...companyData, organic_unit: e })} >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a unidade orgânica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonData.unidade_organicas.map((un) => (
+                        <SelectItem key={un.id} value={un.name}>
+                          {un.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="setor">Setor *</Label>
-                  <Input id="setor" placeholder="Digite o setor" value={companyData.sector} onChange={(e) => setCompanyData({ ...companyData, sector: e.target.value })} />
+                  <Label htmlFor="sector">Departamento *</Label>
+                  <Select value={companyData.sector} onValueChange={(e) => setCompanyData({ ...companyData, sector: e })} >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonData.departamentos.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.name}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -728,7 +798,6 @@ const AddWorker = () => {
                     id="cv-upload"
                     className="hidden"
                     onChange={handleCvChange}
-                    accept=".pdf,.doc,.docx"
                   />
 
                   <label
@@ -766,7 +835,6 @@ const AddWorker = () => {
                     id="other-upload"
                     className="hidden"
                     onChange={handleOtherChange}
-                    accept=".pdf,.jpg,.jpeg,.png"
                   />
 
                   <label

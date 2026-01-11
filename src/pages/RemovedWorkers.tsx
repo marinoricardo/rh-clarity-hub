@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,8 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, UserX, Eye } from "lucide-react";
+import { Search, UserX, Eye, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WorkerService } from "@/data/services/worker.service";
+import { useNavigate } from "react-router-dom";
 
 const removedWorkersData = [
   { id: 1, name: "Roberto Almeida", cargo: "Técnico", unidade: "UN São Paulo", dataRemocao: "15/12/2023", motivo: "Pedido de demissão" },
@@ -20,12 +22,40 @@ const removedWorkersData = [
 ];
 
 const RemovedWorkers = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const workerService = new WorkerService();
+  const [workersData, setWorkersData] = useState<any[]>([]);
 
-  const filteredWorkers = removedWorkersData.filter((worker) =>
-    worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    worker.cargo.toLowerCase().includes(searchTerm.toLowerCase())
+  // Busca workers automaticamente ao abrir o componente
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        setLoading(true);
+        const data = await workerService.removedWorkers(); // chama a API
+        setWorkersData(data); // atualiza estado
+      } catch (err: any) {
+        setError(err.message || "Falha ao carregar trabalhadores");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkers();
+  }, []);
+
+  const filteredWorkers = workersData.filter((worker) =>
+    worker.worker.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatarDataHora = (dataISO: any) => {
+    return new Date(dataISO).toLocaleString('pt-BR', {
+      timeZone: 'UTC',
+    })
+  }
+
 
   return (
     <AppLayout title="Trabalhadores Removidos" subtitle="Histórico de desligamentos">
@@ -37,7 +67,7 @@ const RemovedWorkers = () => {
           </div>
           <div>
             <p className="text-foreground font-semibold">
-              {removedWorkersData.length} trabalhadores removidos
+              {workersData.length} trabalhadores removidos
             </p>
             <p className="text-sm text-muted-foreground">
               Histórico de todos os desligamentos realizados
@@ -61,12 +91,13 @@ const RemovedWorkers = () => {
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                <TableHead>Nome</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Data Remoção</TableHead>
+                <TableHead>Nome do Trabalhador</TableHead>
+                {/* <TableHead>Unidade Orgânica</TableHead> */}
+                <TableHead>Removido por: </TableHead>
+                <TableHead>Quando: </TableHead>
                 <TableHead>Motivo</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>Anexo</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -76,22 +107,27 @@ const RemovedWorkers = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                         <span className="text-sm font-semibold text-muted-foreground">
-                          {worker.name.split(" ").map(n => n[0]).join("")}
+                          {worker.worker.full_name.split(" ").map(n => n[0]).join("")}
                         </span>
                       </div>
-                      <span className="font-medium text-muted-foreground">{worker.name}</span>
+                      <span className="font-medium text-muted-foreground">{worker.worker.full_name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{worker.cargo}</TableCell>
-                  <TableCell className="text-muted-foreground">{worker.unidade}</TableCell>
-                  <TableCell className="text-muted-foreground">{worker.dataRemocao}</TableCell>
+                  <TableCell className="text-muted-foreground">{worker.user.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatarDataHora(worker.created_at)}</TableCell>
                   <TableCell>
                     <span className="px-2 py-1 bg-muted rounded-md text-sm text-muted-foreground">
-                      {worker.motivo}
+                      {worker.reason}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => window.open(worker.attachament, "_blank")}>
+                      <Download className="w-4 h-4 mr-1" />
+                      Ver documento
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/removed-workers/${worker.id}/history`)}>
                       <Eye className="w-4 h-4 mr-1" />
                       Ver histórico
                     </Button>

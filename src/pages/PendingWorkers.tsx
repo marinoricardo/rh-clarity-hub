@@ -97,7 +97,7 @@ const PendingWorkers = () => {
                 </div>
 
                 {/* Action */}
-                <Button onClick={() => navigate("/workers/add")}>
+                <Button onClick={() => navigate(`/pending-workers/edit/${worker.worker_id}`)}>
                   Continuar Cadastro
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>

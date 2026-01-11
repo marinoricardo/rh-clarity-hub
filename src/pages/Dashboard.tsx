@@ -220,20 +220,20 @@ const Dashboard = () => {
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={fundosAlocadosData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" horizontal={true} vertical={false} />
+              <BarChart data={fundosAlocadosData} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" horizontal={false} vertical={true} />
                 <XAxis 
-                  type="number" 
-                  stroke="hsl(220, 10%, 50%)" 
-                  fontSize={12}
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <YAxis 
                   type="category" 
                   dataKey="unidade" 
                   stroke="hsl(220, 10%, 50%)" 
                   fontSize={12}
                   width={120}
+                />
+                <YAxis 
+                  type="number" 
+                  stroke="hsl(220, 10%, 50%)" 
+                  fontSize={12}
+                  tickFormatter={(value) => formatCurrency(value)}
                 />
                 <Tooltip
                   formatter={(value: number, name: string) => [
@@ -249,8 +249,8 @@ const Dashboard = () => {
                 <Legend 
                   formatter={(value) => value === "alocado" ? "Fundos Alocados" : "Gastos com Salários"}
                 />
-                <Bar dataKey="alocado" fill="hsl(29, 98%, 47%)" radius={[0, 4, 4, 0]} name="alocado" />
-                <Bar dataKey="salarios" fill="hsl(199, 89%, 48%)" radius={[0, 4, 4, 0]} name="salarios" />
+                <Bar dataKey="alocado" fill="hsl(29, 98%, 47%)" radius={[4, 0, 0, 4]} name="alocado" />
+                <Bar dataKey="salarios" fill="hsl(199, 89%, 48%)" radius={[4, 0, 0, 4]} name="salarios" />
               </BarChart>
             </ResponsiveContainer>
           </div>

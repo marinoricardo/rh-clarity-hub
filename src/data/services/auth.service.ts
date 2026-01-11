@@ -66,7 +66,7 @@ export class AuthService {
     // Usuário autenticado
     async me() {
         try {
-            const response = await api.get("/me");
+            const response = await api.post("/auth/me");
             return response.data.data;
         } catch (error: any) {
             throw new Error(

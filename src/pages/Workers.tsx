@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WorkerService } from "@/data/services/worker.service";
+import { CommonService } from "@/data/services/common.service";
 
 const Workers = () => {
   const navigate = useNavigate();
@@ -38,6 +39,22 @@ const Workers = () => {
   const [filterEstado, setFilterEstado] = useState("all");
 
   const workerService = new WorkerService();
+
+  const [commonData, setCommonData] = useState<{
+    areas: any[];
+    regiaos: any[];
+    pelouros: any[];
+    unidade_organicas: any[];
+    departamentos: any[];
+  }>({
+    areas: [],
+    regiaos: [],
+    pelouros: [],
+    unidade_organicas: [],
+    departamentos: [],
+  });
+
+  const commonService = new CommonService();
 
   // Busca workers automaticamente ao abrir o componente
   useEffect(() => {
@@ -54,15 +71,22 @@ const Workers = () => {
     };
 
     fetchWorkers();
+    fetchAllCommonData();
   }, []);
+
+  const fetchAllCommonData = async () => {
+    const res = await commonService.fetchCommonData();
+    setCommonData(res);
+    console.log("Common Data:", res);
+  }
 
   const filteredWorkers = workersData.filter((worker) => {
     const matchesSearch =
       worker.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       worker.job_function?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesUnidade =
-      filterUnidade === "all" || worker.unidade?.includes(filterUnidade);
-    const matchesEstado = filterEstado === "all" || worker.estado === filterEstado;
+      filterUnidade === "all" || worker.employment_data.organizational_unit?.includes(filterUnidade);
+    const matchesEstado = filterEstado === "all" || worker.employment_data.status === filterEstado;
     return matchesSearch && matchesUnidade && matchesEstado;
   });
 
@@ -104,12 +128,11 @@ const Workers = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas Unidades</SelectItem>
-                <SelectItem value="São Paulo">UN São Paulo</SelectItem>
-                <SelectItem value="Rio de Janeiro">UN Rio de Janeiro</SelectItem>
-                <SelectItem value="Belo Horizonte">UN Belo Horizonte</SelectItem>
-                <SelectItem value="Curitiba">UN Curitiba</SelectItem>
-                <SelectItem value="Porto Alegre">UN Porto Alegre</SelectItem>
-                <SelectItem value="Brasília">UN Brasília</SelectItem>
+                {commonData.unidade_organicas.map((un) => (
+                  <SelectItem key={un.id} value={un.name}>
+                    {un.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={filterEstado} onValueChange={setFilterEstado}>
@@ -118,9 +141,8 @@ const Workers = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Férias">Férias</SelectItem>
-                <SelectItem value="Licença">Licença</SelectItem>
+                <SelectItem value="activo">Ativo</SelectItem>
+                <SelectItem value="inactivo">Inativo</SelectItem>
               </SelectContent>
             </Select>
           </div>
