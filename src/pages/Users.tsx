@@ -56,8 +56,8 @@ const Users = () => {
     name: "",
     email: "",
     password: "",
-    profile: "",
-    organizational_unit_id: "",
+    role: "",
+    unit_organic: "",
   });
 
   const userService = new UserService();
@@ -96,8 +96,8 @@ const Users = () => {
       name: "",
       email: "",
       password: "",
-      profile: "",
-      organizational_unit_id: "",
+      role: "",
+      unit_organic: "",
     });
     setDialogOpen(true);
   };
@@ -109,8 +109,8 @@ const Users = () => {
       name: user.name || "",
       email: user.email || "",
       password: "",
-      profile: user.profile || "",
-      organizational_unit_id: user.organizational_unit_id?.toString() || "",
+      role: user.role || "",
+      unit_organic: user.unit_organic?.toString() || "",
     });
     setDialogOpen(true);
   };
@@ -124,6 +124,7 @@ const Users = () => {
           delete (updateData as any).password;
         }
         await userService.update(selectedUser.id, updateData);
+        setDialogOpen(false);
         await Swal.fire({
           icon: "success",
           title: "Utilizador actualizado!",
@@ -132,6 +133,8 @@ const Users = () => {
         });
       } else {
         await userService.store(formData);
+        setDialogOpen(false);
+
         await Swal.fire({
           icon: "success",
           title: "Utilizador criado!",
@@ -139,7 +142,6 @@ const Users = () => {
           confirmButtonText: "OK",
         });
       }
-      setDialogOpen(false);
       fetchUsers();
     } catch (err: any) {
       Swal.fire({
@@ -202,7 +204,7 @@ const Users = () => {
     const matchesSearch =
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPerfil = filterPerfil === "all" || user.profile === filterPerfil;
+    const matchesPerfil = filterPerfil === "all" || user.role === filterPerfil;
     return matchesSearch && matchesPerfil;
   });
 
@@ -227,9 +229,9 @@ const Users = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="manager">Gestor</SelectItem>
-                <SelectItem value="user">Utilizador</SelectItem>
+                <SelectItem value="rh">Recursos Humanos</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -275,9 +277,9 @@ const Users = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>{getPerfilBadge(user.profile)}</TableCell>
+                      <TableCell>{getPerfilBadge(user.role)}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {user.organizational_unit?.name || "-"}
+                        {user.unit_organic || "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -355,16 +357,16 @@ const Users = () => {
               <div className="space-y-2">
                 <Label>Perfil *</Label>
                 <Select
-                  value={formData.profile}
-                  onValueChange={(value) => setFormData({ ...formData, profile: value })}
+                  value={formData.role}
+                  onValueChange={(value) => setFormData({ ...formData, role: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o perfil" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="manager">Gestor</SelectItem>
-                    <SelectItem value="user">Utilizador</SelectItem>
+                    <SelectItem value="rh">Recursos Humanos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,9 +374,9 @@ const Users = () => {
               <div className="space-y-2">
                 <Label>Unidade Orgânica</Label>
                 <Select
-                  value={formData.organizational_unit_id}
+                  value={formData.unit_organic}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, organizational_unit_id: value })
+                    setFormData({ ...formData, unit_organic: value })
                   }
                 >
                   <SelectTrigger>
@@ -382,7 +384,7 @@ const Users = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {commonData.unidade_organicas?.map((unit: any) => (
-                      <SelectItem key={unit.id} value={unit.id.toString()}>
+                      <SelectItem key={unit.id} value={unit.name}>
                         {unit.name}
                       </SelectItem>
                     ))}

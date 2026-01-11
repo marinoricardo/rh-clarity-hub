@@ -143,12 +143,12 @@ const Login = () => {
             </div>
 
             <div className="flex items-center justify-end">
-              <button
+              {/* <button
                 type="button"
                 className="text-sm text-primary hover:text-primary-hover font-medium transition-colors"
               >
                 Esqueci a senha
-              </button>
+              </button> */}
             </div>
 
             <Button
@@ -169,7 +169,7 @@ const Login = () => {
           </form>
 
           <p className="text-center text-muted-foreground text-sm mt-8">
-            © 2024 RH Gestão. Todos os direitos reservados.
+            © {new Date().getFullYear()} GueziRH. Todos os direitos reservados.
           </p>
         </div>
       </div>

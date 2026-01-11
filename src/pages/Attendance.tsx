@@ -60,7 +60,7 @@ const Attendance = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
-  const [workersData, setWorkersData] = useState<any[]>([]); // agora dinâmico
+  const [workersData, setWorkersData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -207,49 +207,7 @@ const Attendance = () => {
           </Button>
         </div>
 
-        {/* Workers Summary Table */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
-            <h3 className="font-semibold text-foreground">Resumo de Trabalhadores por Departamento</h3>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="table-header">
-                <TableHead>Nome Completo</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Tipo de Contrato</TableHead>
-                <TableHead>Salário</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {workersData
-                .filter((w) => w.full_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-                .map((worker) => (
-                  <TableRow key={worker.id} className="table-row">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-semibold text-primary">
-                            {worker.full_name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-                          </span>
-                        </div>
-                        <span className="font-medium">{worker.full_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{worker.work_email || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">{worker.employment_data?.organic_unit || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">{worker.job_function || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">{worker.employment_data?.contract_type || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {worker.employment_data?.salary ? `${Number(worker.employment_data.salary).toLocaleString("pt-MZ")} MT` : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </div>
+
 
         {/* Attendance Records Table */}
         <div className="bg-card rounded-xl border border-border overflow-hidden">

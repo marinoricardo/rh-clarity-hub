@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import {
   Users,
@@ -32,6 +32,22 @@ import {
 } from "recharts";
 import { FundoAlocadosService } from "@/data/services/fundoalocados.service";
 import { WorkerService } from "@/data/services/worker.service";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 
 const COLORS = [
   "hsl(29, 98%, 47%)",
@@ -54,6 +70,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [fundosData, setFundosData] = useState<any[]>([]);
+  const [workersData, setWorkersData] = useState<any[]>([]);
+
   const [statsData, setStatsData] = useState({
     totalWorkers: 0,
     pendingWorkers: 0,
@@ -65,7 +83,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchAllData();
   }, []);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const res = await workerService.index();
+      setWorkersData(res); // atualiza estado
+    } catch (err: any) {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -183,13 +213,12 @@ const Dashboard = () => {
                         <TrendingDown className="w-4 h-4 text-destructive" />
                       )}
                       <span
-                        className={`text-sm font-medium ${
-                          stat.changeType === "positive"
-                            ? "text-success"
-                            : stat.changeType === "negative"
+                        className={`text-sm font-medium ${stat.changeType === "positive"
+                          ? "text-success"
+                          : stat.changeType === "negative"
                             ? "text-destructive"
                             : "text-muted-foreground"
-                        }`}
+                          }`}
                       >
                         {stat.change}
                       </span>
@@ -314,10 +343,51 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-
+        {/* Workers Summary Table */}
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="px-4 py-3 border-b border-border">
+            <h3 className="font-semibold text-foreground">Resumo de Trabalhadores por Departamento</h3>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="table-header">
+                <TableHead>Nome Completo</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Unidade</TableHead>
+                <TableHead>Função</TableHead>
+                <TableHead>Tipo de Contrato</TableHead>
+                <TableHead>Salário</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workersData
+                .filter((w) => w.full_name?.toLowerCase().includes(""))
+                .map((worker) => (
+                  <TableRow key={worker.id} className="table-row">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-semibold text-primary">
+                            {worker.full_name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                          </span>
+                        </div>
+                        <span className="font-medium">{worker.full_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{worker.work_email || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.employment_data?.organic_unit || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.job_function || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{worker.employment_data?.contract_type || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {worker.employment_data?.salary ? `${Number(worker.employment_data.salary).toLocaleString("pt-MZ")} MT` : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Attendance Chart */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -361,7 +431,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Department Distribution */}
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-foreground">Por Departamento</h3>
@@ -402,7 +471,7 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </AppLayout>
   );

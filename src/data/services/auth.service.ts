@@ -40,7 +40,7 @@ export class AuthService {
     // Logout
     async logout() {
         try {
-            await api.post("/logout");
+            await api.post("/auth/logout");
             this.removeToken();
         } catch (error: any) {
             throw new Error(

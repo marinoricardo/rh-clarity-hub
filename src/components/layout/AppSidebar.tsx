@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSidebarContext } from "@/contexts/SidebarContext";
 import { AuthService } from "@/data/services/auth.service";
+import Swal from "sweetalert2";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -34,10 +35,42 @@ const AppSidebar = () => {
   const location = useLocation();
   const { collapsed, toggleCollapsed } = useSidebarContext();
   const authService = new AuthService();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await authService.logout();
-    window.location.href = "/";
+    // await authService.logout();
+    // window.location.href = "/";
+    // console.log("Logout clicked");
+    const result = await Swal.fire({
+      title: 'Sair da Sessão?',
+      text: 'Tem a certeza que deseja terminar a sessão?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sair',
+      cancelButtonText: 'Cancelar',
+      background: '#ffffff',
+      color: '#000000',
+      customClass: {
+        popup: 'rounded-lg',
+        confirmButton: 'px-4 py-2 font-medium rounded-lg',
+        cancelButton: 'px-4 py-2 font-medium rounded-lg'
+      }
+    });
+
+    if (result.isConfirmed) {
+      authService.logout();
+      Swal.fire({
+        title: 'Até Logo!',
+        text: 'Sessão encerrada com sucesso.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        navigate('/');
+      });
+    }
   };
 
   return (
