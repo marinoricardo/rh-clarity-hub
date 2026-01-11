@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Workers from "./pages/Workers";
@@ -17,34 +18,38 @@ import RemovedWorkers from "./pages/RemovedWorkers";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import WorkerDetailsHist from "./pages/WorkerDetailsHist";
+import Users from "./pages/Users";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/workers" element={<Workers />} />
-          <Route path="/workers/add" element={<AddWorker />} />
-          <Route path="/workers/edit/:id" element={<AddWorker />} />
-          <Route path="/workers/:id" element={<WorkerDetails />} />
-          <Route path="/pending-workers" element={<PendingWorkers />} />
-          <Route path="/pending-workers/edit/:id" element={<AddWorker />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/contracts" element={<Contracts />} />
-          <Route path="/evaluations" element={<Evaluations />} />
-          <Route path="/financial" element={<Financial />} />
-          <Route path="/removed-workers" element={<RemovedWorkers />} />
-          <Route path="/removed-workers/:id/history" element={<WorkerDetailsHist />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <SidebarProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/workers" element={<Workers />} />
+            <Route path="/workers/add" element={<AddWorker />} />
+            <Route path="/workers/edit/:id" element={<AddWorker />} />
+            <Route path="/workers/:id" element={<WorkerDetails />} />
+            <Route path="/pending-workers" element={<PendingWorkers />} />
+            <Route path="/pending-workers/edit/:id" element={<AddWorker />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/evaluations" element={<Evaluations />} />
+            <Route path="/financial" element={<Financial />} />
+            <Route path="/removed-workers" element={<RemovedWorkers />} />
+            <Route path="/removed-workers/:id/history" element={<WorkerDetailsHist />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </SidebarProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import {
   Users,
@@ -10,6 +11,7 @@ import {
   CalendarCheck,
   UserPlus,
   Building2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -28,68 +30,8 @@ import {
   Cell,
   Legend,
 } from "recharts";
-
-const statsCards = [
-  {
-    title: "Total de Trabalhadores",
-    value: "248",
-    change: "+12",
-    changeType: "positive",
-    icon: Users,
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    title: "Trabalhadores Pendentes",
-    value: "8",
-    change: "-3",
-    changeType: "positive",
-    icon: Clock,
-    color: "bg-warning-light text-warning",
-  },
-  {
-    title: "Faltas do Mês",
-    value: "23",
-    change: "+5",
-    changeType: "negative",
-    icon: AlertTriangle,
-    color: "bg-destructive-light text-destructive",
-  },
-  {
-    title: "Contratos a Expirar",
-    value: "5",
-    change: "30 dias",
-    changeType: "neutral",
-    icon: FileText,
-    color: "bg-info-light text-info",
-  },
-];
-
-const attendanceData = [
-  { month: "Jan", presentes: 95, faltas: 5 },
-  { month: "Fev", presentes: 92, faltas: 8 },
-  { month: "Mar", presentes: 97, faltas: 3 },
-  { month: "Abr", presentes: 94, faltas: 6 },
-  { month: "Mai", presentes: 96, faltas: 4 },
-  { month: "Jun", presentes: 93, faltas: 7 },
-];
-
-// Dados de fundos alocados por unidade orgânica
-const fundosAlocadosData = [
-  { unidade: "UN São Paulo", alocado: 500000, salarios: 425000 },
-  { unidade: "UN Rio de Janeiro", alocado: 320000, salarios: 260000 },
-  { unidade: "UN Belo Horizonte", alocado: 230000, salarios: 190000 },
-  { unidade: "UN Curitiba", alocado: 180000, salarios: 140000 },
-  { unidade: "UN Porto Alegre", alocado: 160000, salarios: 125000 },
-  { unidade: "UN Brasília", alocado: 130000, salarios: 100000 },
-];
-
-const departmentData = [
-  { name: "Administrativo", value: 45 },
-  { name: "Operações", value: 85 },
-  { name: "Vendas", value: 38 },
-  { name: "TI", value: 22 },
-  { name: "Marketing", value: 18 },
-];
+import { FundoAlocadosService } from "@/data/services/fundoalocados.service";
+import { WorkerService } from "@/data/services/worker.service";
 
 const COLORS = [
   "hsl(29, 98%, 47%)",
@@ -98,13 +40,6 @@ const COLORS = [
   "hsl(280, 65%, 60%)",
   "hsl(38, 92%, 50%)",
   "hsl(0, 72%, 51%)",
-];
-
-const recentActivities = [
-  { type: "add", text: "Maria Santos adicionada ao departamento de Vendas", time: "2 min atrás" },
-  { type: "contract", text: "Contrato de Pedro Lima renovado", time: "1 hora atrás" },
-  { type: "evaluation", text: "Avaliação de desempenho de Ana Costa concluída", time: "3 horas atrás" },
-  { type: "absence", text: "João Ferreira registrou falta justificada", time: "5 horas atrás" },
 ];
 
 const formatCurrency = (value: number) => {
@@ -117,6 +52,112 @@ const formatCurrency = (value: number) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [fundosData, setFundosData] = useState<any[]>([]);
+  const [statsData, setStatsData] = useState({
+    totalWorkers: 0,
+    pendingWorkers: 0,
+    removedWorkers: 0,
+  });
+
+  const fundoService = new FundoAlocadosService();
+  const workerService = new WorkerService();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [fundos, workers, pending, removed] = await Promise.all([
+        fundoService.index(),
+        workerService.index(),
+        workerService.pendingWorkers(),
+        workerService.removedWorkers(),
+      ]);
+
+      // Transform fundos data for chart
+      const chartData = fundos?.map((fundo: any) => ({
+        unidade: fundo.organizational_unit?.name || fundo.name || "Sem Nome",
+        alocado: Number(fundo.allocated_amount) || 0,
+        salarios: Number(fundo.salary_expenses) || 0,
+      })) || [];
+
+      setFundosData(chartData);
+      setStatsData({
+        totalWorkers: workers?.length || 0,
+        pendingWorkers: pending?.length || 0,
+        removedWorkers: removed?.length || 0,
+      });
+    } catch (err) {
+      console.error("Erro ao carregar dados do dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statsCards = [
+    {
+      title: "Total de Trabalhadores",
+      value: statsData.totalWorkers.toString(),
+      change: "+12",
+      changeType: "positive",
+      icon: Users,
+      color: "bg-primary/10 text-primary",
+    },
+    {
+      title: "Trabalhadores Pendentes",
+      value: statsData.pendingWorkers.toString(),
+      change: "-3",
+      changeType: "positive",
+      icon: Clock,
+      color: "bg-warning-light text-warning",
+    },
+    {
+      title: "Trabalhadores Removidos",
+      value: statsData.removedWorkers.toString(),
+      change: "",
+      changeType: "neutral",
+      icon: AlertTriangle,
+      color: "bg-destructive-light text-destructive",
+    },
+    {
+      title: "Contratos a Expirar",
+      value: "5",
+      change: "30 dias",
+      changeType: "neutral",
+      icon: FileText,
+      color: "bg-info-light text-info",
+    },
+  ];
+
+  const attendanceData = [
+    { month: "Jan", presentes: 95, faltas: 5 },
+    { month: "Fev", presentes: 92, faltas: 8 },
+    { month: "Mar", presentes: 97, faltas: 3 },
+    { month: "Abr", presentes: 94, faltas: 6 },
+    { month: "Mai", presentes: 96, faltas: 4 },
+    { month: "Jun", presentes: 93, faltas: 7 },
+  ];
+
+  const departmentData = [
+    { name: "Administrativo", value: 45 },
+    { name: "Operações", value: 85 },
+    { name: "Vendas", value: 38 },
+    { name: "TI", value: 22 },
+    { name: "Marketing", value: 18 },
+  ];
+
+  if (loading) {
+    return (
+      <AppLayout title="Dashboard" subtitle="Visão geral do sistema">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout title="Dashboard" subtitle="Visão geral do sistema">
@@ -133,25 +174,27 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                   <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stat.changeType === "positive" && (
-                      <TrendingUp className="w-4 h-4 text-success" />
-                    )}
-                    {stat.changeType === "negative" && (
-                      <TrendingDown className="w-4 h-4 text-destructive" />
-                    )}
-                    <span
-                      className={`text-sm font-medium ${
-                        stat.changeType === "positive"
-                          ? "text-success"
-                          : stat.changeType === "negative"
-                          ? "text-destructive"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                  </div>
+                  {stat.change && (
+                    <div className="flex items-center gap-1 mt-2">
+                      {stat.changeType === "positive" && (
+                        <TrendingUp className="w-4 h-4 text-success" />
+                      )}
+                      {stat.changeType === "negative" && (
+                        <TrendingDown className="w-4 h-4 text-destructive" />
+                      )}
+                      <span
+                        className={`text-sm font-medium ${
+                          stat.changeType === "positive"
+                            ? "text-success"
+                            : stat.changeType === "negative"
+                            ? "text-destructive"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {stat.change}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className={`stats-card-icon ${stat.color}`}>
                   <stat.icon className="w-6 h-6" />
@@ -209,8 +252,12 @@ const Dashboard = () => {
                 <Building2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Fundos Alocados por Unidade Orgânica</h3>
-                <p className="text-sm text-muted-foreground">Comparativo entre valores alocados e gastos com salários</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Fundos Alocados por Unidade Orgânica
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Comparativo entre valores alocados e gastos com salários
+                </p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={() => navigate("/financial")}>
@@ -219,40 +266,52 @@ const Dashboard = () => {
             </Button>
           </div>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={fundosAlocadosData} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" horizontal={false} vertical={true} />
-                <XAxis 
-                  type="category" 
-                  dataKey="unidade" 
-                  stroke="hsl(220, 10%, 50%)" 
-                  fontSize={12}
-                  width={120}
-                />
-                <YAxis 
-                  type="number" 
-                  stroke="hsl(220, 10%, 50%)" 
-                  fontSize={12}
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    formatCurrency(value),
-                    name === "alocado" ? "Fundos Alocados" : "Gastos com Salários"
-                  ]}
-                  contentStyle={{
-                    backgroundColor: "hsl(0, 0%, 100%)",
-                    border: "1px solid hsl(220, 14%, 90%)",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend 
-                  formatter={(value) => value === "alocado" ? "Fundos Alocados" : "Gastos com Salários"}
-                />
-                <Bar dataKey="alocado" fill="hsl(29, 98%, 47%)" radius={[4, 0, 0, 4]} name="alocado" />
-                <Bar dataKey="salarios" fill="hsl(199, 89%, 48%)" radius={[4, 0, 0, 4]} name="salarios" />
-              </BarChart>
-            </ResponsiveContainer>
+            {fundosData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={fundosData} layout="horizontal">
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(220, 14%, 90%)"
+                    horizontal={false}
+                    vertical={true}
+                  />
+                  <XAxis
+                    type="category"
+                    dataKey="unidade"
+                    stroke="hsl(220, 10%, 50%)"
+                    fontSize={12}
+                  />
+                  <YAxis
+                    type="number"
+                    stroke="hsl(220, 10%, 50%)"
+                    fontSize={12}
+                    tickFormatter={(value) => formatCurrency(value)}
+                  />
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      formatCurrency(value),
+                      name === "alocado" ? "Fundos Alocados" : "Gastos com Salários",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "hsl(0, 0%, 100%)",
+                      border: "1px solid hsl(220, 14%, 90%)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend
+                    formatter={(value) =>
+                      value === "alocado" ? "Fundos Alocados" : "Gastos com Salários"
+                    }
+                  />
+                  <Bar dataKey="alocado" fill="hsl(29, 98%, 47%)" radius={[4, 4, 0, 0]} name="alocado" />
+                  <Bar dataKey="salarios" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} name="salarios" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Nenhum dado de fundos disponível
+              </div>
+            )}
           </div>
         </div>
 
@@ -265,7 +324,7 @@ const Dashboard = () => {
                 <h3 className="text-lg font-semibold text-foreground">Taxa de Presença</h3>
                 <p className="text-sm text-muted-foreground">Últimos 6 meses</p>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => navigate("/attendance")}>
                 Ver detalhes
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
@@ -342,34 +401,6 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-card rounded-xl border border-border p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">Atividades Recentes</h3>
-              <p className="text-sm text-muted-foreground">Últimas atualizações do sistema</p>
-            </div>
-            <Button variant="ghost" size="sm">
-              Ver todas
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-          <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0"
-              >
-                <div className="w-2 h-2 mt-2 rounded-full bg-primary" />
-                <div className="flex-1">
-                  <p className="text-sm text-foreground">{activity.text}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
