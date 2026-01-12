@@ -370,7 +370,7 @@ const WorkerDetails = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Endereço</p>
                   <p className="text-foreground font-medium">
-                    {workerData.address}, {workerData.neighborhood}, {workerData.district}, {workerData.province}, {workerData.city}, CEP: {workerData.postal_box}
+                    {workerData.address}, {workerData.neighborhood}, {workerData.district}, {workerData.province}, {workerData.city}, codigo postal: {workerData.postal_box}
                   </p>
                 </div>
               </div>

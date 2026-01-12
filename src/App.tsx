@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import WorkerDetailsHist from "./pages/WorkerDetailsHist";
 import Users from "./pages/Users";
+import WorkersApprove from "./pages/WorkersApprove";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/workers" element={<Workers />} />
+            <Route path="/approve-pending" element={<WorkersApprove />} />
             <Route path="/workers/add" element={<AddWorker />} />
             <Route path="/workers/edit/:id" element={<AddWorker />} />
             <Route path="/workers/:id" element={<WorkerDetails />} />

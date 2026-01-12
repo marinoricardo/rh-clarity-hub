@@ -3,14 +3,21 @@ import { api } from "./api";
 
 export class WorkerService {
   // List all workers
-  async index() {
-    try {
-      const response = await api.get("/workers");
-      return response.data.data;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to fetch workers");
-    }
+  // List all workers
+async index(active?: boolean) {
+  try {
+    const response = await api.get("/workers", {
+      params: active !== undefined ? { active } : {},
+    });
+
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch workers"
+    );
   }
+}
+
 
   // List workers with incomplete steps
   async pendingWorkers() {
@@ -100,6 +107,18 @@ export class WorkerService {
       throw new Error(error.response?.data?.message || "Worker not found");
     }
   }
+
+  
+  // Get worker by ID
+  async approveWorker(workerId: number | string) {
+    try {
+      const response = await api.post(`/workers/approve/${workerId}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Worker not found");
+    }
+  }
+
 
   // Update worker steps
   async updateSteps(workerId: number | string, steps: Record<string, boolean>) {

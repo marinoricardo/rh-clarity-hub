@@ -92,6 +92,9 @@ const AddWorker = () => {
     sector: "",
     salary: "",
     status: "activo",
+    pelouro_id: "",
+  unidade_organica_id: "",
+  departamento_id: ""
   });
 
   // Fetch worker data if in edit mode
@@ -107,6 +110,18 @@ const AddWorker = () => {
     setCommonData(res);
     console.log("Common Data:", res);
   }
+
+  const unidadesFiltradas = commonData.unidade_organicas.filter(
+  (un) => String(un.pelouro_id) === companyData.pelouro_id
+);
+
+const departamentosFiltrados = commonData.departamentos.filter(
+  (dept) =>
+    String(dept.unidade_organica_id) === companyData.unidade_organica_id
+);
+
+
+
 
   const fetchWorkerData = async () => {
     setIsFetching(true);
@@ -148,6 +163,9 @@ const AddWorker = () => {
         sector: worker.employment_data?.sector || "",
         salary: worker.employment_data?.salary || "",
         status: worker.employment_data?.status || "activo",
+        pelouro_id: "",
+  unidade_organica_id: "",
+  departamento_id: ""
       });
     } catch (err: any) {
       Swal.fire({
@@ -560,81 +578,104 @@ const AddWorker = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="area">Área *</Label>
-                  <Select value={companyData.area} onValueChange={(e) => setCompanyData({ ...companyData, area: e })} >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a área" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonData.areas.map((area) => (
-                        <SelectItem key={area.id} value={area.name}>
-                          {area.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="region">Região *</Label>
-                  <Select value={companyData.region} onValueChange={(e) => setCompanyData({ ...companyData, region: e })} >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a região" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonData.regiaos.map((regiao) => (
-                        <SelectItem key={regiao.id} value={regiao.name}>
-                          {regiao.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Pelouro *</Label>
-                  <Select value={companyData.department} onValueChange={(e) => setCompanyData({ ...companyData, department: e })} >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o pelouro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonData.pelouros.map((pelouro) => (
-                        <SelectItem key={pelouro.id} value={pelouro.name}>
-                          {pelouro.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="organic_unit">Unidade Orgânica *</Label>
-                  <Select value={companyData.organic_unit} onValueChange={(e) => setCompanyData({ ...companyData, organic_unit: e })} >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a unidade orgânica" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonData.unidade_organicas.map((un) => (
-                        <SelectItem key={un.id} value={un.name}>
-                          {un.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sector">Departamento *</Label>
-                  <Select value={companyData.sector} onValueChange={(e) => setCompanyData({ ...companyData, sector: e })} >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o departamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commonData.departamentos.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.name}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+<div className="space-y-2">
+  <Label htmlFor="department">Pelouro *</Label>
+
+  <Select
+onValueChange={(pelouroId) => {
+    const pelouro = commonData.pelouros.find(
+      (p) => String(p.id) === pelouroId
+    );
+
+    setCompanyData({
+      ...companyData,
+      pelouro_id: pelouroId,
+      department: pelouro?.name || "",
+      unidade_organica_id: "",
+      organic_unit: "",
+      departamento_id: "",
+      sector: "",
+    });
+  }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Selecione o pelouro" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {commonData.pelouros.map((pelouro) => (
+        <SelectItem key={pelouro.id} value={String(pelouro.id)}>
+          {pelouro.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div className="space-y-2">
+  <Label htmlFor="organic_unit">Unidade Orgânica *</Label>
+
+  <Select
+  value={companyData.unidade_organica_id}
+  onValueChange={(unidadeId) => {
+    const unidade = unidadesFiltradas.find(
+      (u) => String(u.id) === unidadeId
+    );
+
+    setCompanyData({
+      ...companyData,
+      unidade_organica_id: unidadeId,
+      organic_unit: unidade?.name || "",
+      departamento_id: "",
+      sector: "",
+    });
+  }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Selecione a unidade orgânica" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {unidadesFiltradas.map((un) => (
+        <SelectItem key={un.id} value={String(un.id)}>
+          {un.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div className="space-y-2">
+  <Label htmlFor="sector">Departamento *</Label>
+
+  <Select
+    value={companyData.departamento_id}
+  onValueChange={(departamentoId) => {
+    const departamento = departamentosFiltrados.find(
+      (d) => String(d.id) === departamentoId
+    );
+
+    setCompanyData({
+      ...companyData,
+      departamento_id: departamentoId,
+      sector: departamento?.name || "",
+    });
+  }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Selecione o departamento" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {departamentosFiltrados.map((dept) => (
+        <SelectItem key={dept.id} value={String(dept.id)}>
+          {dept.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
 
                 <div className="space-y-2">
                   <Label htmlFor="salario">Salário *</Label>
