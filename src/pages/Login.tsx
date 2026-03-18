@@ -50,7 +50,7 @@ const Login = () => {
 
           <h2 className="text-4xl font-bold text-sidebar-accent-foreground mb-4 leading-tight">
             Gerencie sua equipe<br />
-            <span className="text-primary">com eficiência</span>
+            <span className="text-primary">com eficiência.</span>
           </h2>
 
           <p className="text-sidebar-foreground text-lg max-w-md">

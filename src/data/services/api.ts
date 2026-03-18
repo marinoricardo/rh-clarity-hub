@@ -3,8 +3,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 export const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  // baseURL: "http://guezirh.edm.co.mz/rh-clarity-hub-backend/public/api",
+  // baseURL: "http://localhost:8000/api",
+  baseURL: "http://guezirh.edm.co.mz/rh-clarity-hub-backend/public/api",
 });
 
 // Interceptor para adicionar token
