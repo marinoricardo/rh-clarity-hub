@@ -334,7 +334,9 @@ const Evaluations = () => {
                           <TableBody>
                             {worker.performances.map((evaluation) => (
                               <TableRow key={evaluation.id} className="table-row">
-                                <TableCell className="text-muted-foreground">{evaluation.perfomance_date}</TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {new Date(evaluation.perfomance_date).toLocaleDateString("pt-PT")}
+                                </TableCell>
                                 <TableCell>{getStatusBadge(evaluation.status)}</TableCell>
                                 <TableCell>
                                   <Button variant="outline" size="sm" onClick={() => window.open(evaluation.attachament, "_blank")}>

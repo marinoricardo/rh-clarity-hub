@@ -347,6 +347,16 @@ const WorkerDetails = () => {
                   <p className="text-sm text-muted-foreground">Número do Documento</p>
                   <p className="text-foreground font-medium">{workerData.document_number}</p>
                 </div>
+
+                                <div>
+                  <p className="text-sm text-muted-foreground">Banco</p>
+                  <p className="text-foreground font-medium">{workerData.bank}</p>
+                </div>
+
+                                <div>
+                  <p className="text-sm text-muted-foreground">NIB/IBAN</p>
+                  <p className="text-foreground font-medium">{workerData.nib_iban}</p>
+                </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email Profissional</p>
                   <p className="text-foreground font-medium">{workerData.work_email}</p>
@@ -387,19 +397,19 @@ const WorkerDetails = () => {
                   <p className="text-foreground font-medium">{workerData.job_function}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Unidade Organizacional</p>
-                  <p className="text-foreground font-medium">{workerData.organizational_unit}</p>
+                  <p className="text-sm text-muted-foreground">Unidade Organica</p>
+                  <p className="text-foreground font-medium">{workerData.employment_data?.organizational_unit}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Pelouro</p>
                   <p className="text-foreground font-medium">{workerData.employment_data?.pelouro}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-muted-foreground">Área</p>
                   <p className="text-foreground font-medium">{workerData.employment_data?.area}</p>
-                </div>
+                </div> */}
                 <div>
-                  <p className="text-sm text-muted-foreground">Setor</p>
+                  <p className="text-sm text-muted-foreground">Departamento</p>
                   <p className="text-foreground font-medium">{workerData.employment_data?.sector}</p>
                 </div>
                 <div>
@@ -422,10 +432,10 @@ const WorkerDetails = () => {
                   <p className="text-sm text-muted-foreground">Nível Acadêmico</p>
                   <p className="text-foreground font-medium">{workerData.employment_data?.academic_level}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-muted-foreground">Região</p>
                   <p className="text-foreground font-medium">{workerData.employment_data?.region}</p>
-                </div>
+                </div> */}
                 <div>
                   <p className="text-sm text-muted-foreground">Salário</p>
                   <p className="text-foreground font-medium">{Number(workerData.employment_data?.salary || 0).toFixed(2)} MZN</p>

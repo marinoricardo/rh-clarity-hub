@@ -77,6 +77,8 @@ const AddWorker = () => {
     alternative_contact: "",
     phone: "",
     job_function: "",
+    bank: "",
+    nib_iban: ""
   });
 
   const [companyData, setCompanyData] = useState({
@@ -148,6 +150,9 @@ const departamentosFiltrados = commonData.departamentos.filter(
         alternative_contact: worker.alternative_contact || "",
         phone: worker.phone || "",
         job_function: worker.job_function || "",
+        bank: worker.bank || "",
+        nib_iban: worker.nib_iban || "",
+
       });
       // Populate company data
       setCompanyData({
@@ -522,6 +527,45 @@ const departamentosFiltrados = commonData.departamentos.filter(
                   <Label htmlFor="funcao">Função *</Label>
                   <Input id="funcao" placeholder="Digite a função" value={personalData.job_function} onChange={(e) => setPersonalData({ ...personalData, job_function: e.target.value })} />
                 </div>
+
+<div className="space-y-2">
+  <Label htmlFor="banco">Banco *</Label>
+  <Select
+    value={personalData.bank}
+    onValueChange={(e) =>
+      setPersonalData({ ...personalData, bank: e })
+    }
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Selecione o banco" />
+    </SelectTrigger>
+
+    <SelectContent>
+      <SelectItem value="Millennium BIM">Millennium BIM</SelectItem>
+      <SelectItem value="BCI">BCI</SelectItem>
+      <SelectItem value="Standard Bank">Standard Bank</SelectItem>
+      <SelectItem value="Absa Bank">Absa Bank</SelectItem>
+      <SelectItem value="Moza Banco">Moza Banco</SelectItem>
+      <SelectItem value="Banco Terra">Banco Terra</SelectItem>
+      <SelectItem value="Banco Único">Banco Único</SelectItem>
+      <SelectItem value="Banco BIG">Banco BIG</SelectItem>
+      <SelectItem value="Ecobank">Ecobank</SelectItem>
+      <SelectItem value="Access Bank">Access Bank</SelectItem>
+      <SelectItem value="UBA">UBA</SelectItem>
+      <SelectItem value="FNB">FNB</SelectItem>
+      <SelectItem value="Nedbank">Nedbank</SelectItem>
+      <SelectItem value="First Capital Bank">First Capital Bank</SelectItem>
+      <SelectItem value="BNI">Banco Nacional de Investimento (BNI)</SelectItem>
+      <SelectItem value="Socremo">Socremo Microbanco</SelectItem>
+      <SelectItem value="Letshego">Letshego Bank</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nib_iban">NIB/IBAN *</Label>
+                  <Input id="nib_iban" placeholder="Digite o seu NIB/IBAN" value={personalData.nib_iban} onChange={(e) => setPersonalData({ ...personalData, nib_iban: e.target.value })} />
+                </div>
               </div>
             </div>
           )}
@@ -868,6 +912,43 @@ onValueChange={(pelouroId) => {
                 <div className="border border-border rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <Label className="text-base font-semibold">Outras Certificações</Label>
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                  </div>
+
+                  <input
+                    type="file"
+                    id="other-upload"
+                    className="hidden"
+                    onChange={handleOtherChange}
+                  />
+
+                  <label
+                    htmlFor="other-upload"
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer block w-full"
+                  >
+                    <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
+
+                    {otherFile ? (
+                      <>
+                        <p className="text-sm font-medium text-foreground">{otherFile.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Clique para trocar o ficheiro
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-foreground">Clique para fazer upload</p>
+                        <p className="text-xs text-muted-foreground">PDF, JPG, PNG até 10MB</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                
+                {/* Declaracao/Dados Bancarios */}
+                <div className="border border-border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-base font-semibold">Declaracao/Dados Bancarios</Label>
                     <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
 

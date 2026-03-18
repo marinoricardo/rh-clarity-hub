@@ -93,7 +93,7 @@ const Financial = () => {
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
+    return new Intl.NumberFormat("pt-PT", {
       style: "currency",
       currency: "MZN",
     }).format(value);
@@ -270,6 +270,8 @@ const Financial = () => {
               <TableRow className="table-header">
                 <TableHead>Unidade Orgânica</TableHead>
                 <TableHead>Valor Alocado</TableHead>
+                <TableHead>Valor Usado</TableHead>
+                <TableHead>Saldo actual</TableHead>
                 <TableHead>Última Atualização</TableHead>
                 {/* <TableHead className="text-right">Ações</TableHead> */}
               </TableRow>
@@ -288,6 +290,15 @@ const Financial = () => {
                   <TableCell className="font-semibold text-foreground">
                     {formatCurrency(fundo.valor_alocado)}
                   </TableCell>
+                                      <TableCell className="font-semibold text-foreground">
+                    {formatCurrency(fundo.total_salarios_pagos)}
+                  </TableCell>
+<TableCell className="font-semibold text-foreground">
+  {formatCurrency(
+    (fundo.valor_alocado ?? 0) - (fundo.total_salarios_pagos ?? 0)
+  )}
+</TableCell>
+
                   <TableCell className="text-muted-foreground">{formatarDataHora(fundo.created_at)}</TableCell>
                   {/* <TableCell className="text-right">
                     <Dialog open={dialogOpen && selectedUnidade?.id === fundo.id} onOpenChange={setDialogOpen}>

@@ -27,13 +27,13 @@ const menuItems = [
     icon: Clock,
     label: "Trabalhadores Pendentes",
     path: "/pending-workers",
-    hiddenFor: ["normal"],
+    hiddenFor: ["normal", "rh"],
   },
   {
     icon: Hourglass,
     label: "Aguardando aprovação",
     path: "/approve-pending",
-    hiddenFor: ["normal"],
+    hiddenFor: ["normal", "rh"],
   },
 
   { icon: Calendar, label: "Presenças", path: "/attendance" },

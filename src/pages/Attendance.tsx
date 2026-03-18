@@ -195,9 +195,19 @@ const Attendance = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="Ausente">Ausente</SelectItem>
-                <SelectItem value="Dispensa">Dispensa</SelectItem>
-                <SelectItem value="Presente">Presente</SelectItem>
+  {/* Presenças */}
+  <SelectItem value="Presente">Presente</SelectItem>
+  <SelectItem value="Ausente">Ausente</SelectItem>
+
+  {/* Tipos de ausência */}
+  <SelectItem value="Dispensa">Dispensa</SelectItem>
+  <SelectItem value="Ferias">Férias</SelectItem>
+  <SelectItem value="Viagem">Viagem</SelectItem>
+  <SelectItem value="Casamento">Casamento</SelectItem>
+  <SelectItem value="Doenca">Doença</SelectItem>
+
+  {/* Não aplicável */}
+  <SelectItem value="Nao aplicavel">Não aplicável</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -260,123 +270,140 @@ const Attendance = () => {
         </div>
 
         {/* Dialog Form */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Registrar Presença</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Trabalhador</Label>
-                <Select
-                  value={formData.worker_id}
-                  onValueChange={(value) => setFormData({ ...formData, worker_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o trabalhador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workersData.map(w => (
-                      <SelectItem key={w.id} value={w.id.toString()}>
-                        {w.id} - {w.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+  <DialogContent className="max-w-lg">
+    <DialogHeader>
+      <DialogTitle>Registrar Presença</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4 pt-4">
+      {/* Seleção do trabalhador */}
+      <div className="space-y-2">
+        <Label>Trabalhador</Label>
+        <Select
+          value={formData.worker_id}
+          onValueChange={(value) => setFormData({ ...formData, worker_id: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o trabalhador" />
+          </SelectTrigger>
+          <SelectContent>
+            {workersData.map(w => (
+              <SelectItem key={w.id} value={w.id.toString()}>
+                {w.id} - {w.full_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Data Início</Label>
-                  <Input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data Fim</Label>
-                  <Input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  />
-                </div>
-              </div>
+      {/* Data de início */}
+      <div className="space-y-2">
+        <Label>Data</Label>
+        <Input
+          type="date"
+          value={formData.start_date || new Date().toISOString().split('T')[0]}
+          onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+        />
+      </div>
 
-              <div className="space-y-2">
-                <Label>Absentismo</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Ausente">Ausente</SelectItem>
-                    <SelectItem value="Dispensa">Dispensa</SelectItem>
-                    <SelectItem value="Presente">Presente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Campo opcional de data fim - só para tipos de ausência longos */}
+      {['Ferias', 'Dispensa', 'Ausencia'].includes(formData.status) && (
+        <div className="space-y-2">
+          <Label>Data Fim</Label>
+          <Input
+            type="date"
+            value={formData.end_date}
+            onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+          />
+        </div>
+      )}
 
-              <div className="space-y-2">
-                <Label>Observações</Label>
-                <Textarea
-                  placeholder="Descreva observações adicionais..."
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Anexar documento (opcional)
-                </label>
+      {/* Tipo de ausência / presença */}
+      <div className="space-y-2">
+        <Label>Absentismo</Label>
+        <Select
+          value={formData.status}
+          onValueChange={(value) => setFormData({ ...formData, status: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* Presenças */}
+            <SelectItem value="Presente">Presente</SelectItem>
+            <SelectItem value="Ausente">Ausente</SelectItem>
 
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                >
-                  <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+            {/* Tipos de ausência */}
+            <SelectItem value="Dispensa">Dispensa</SelectItem>
+            <SelectItem value="Ferias">Férias</SelectItem>
+            <SelectItem value="Viagem">Viagem</SelectItem>
+            <SelectItem value="Casamento">Casamento</SelectItem>
+            <SelectItem value="Doenca">Doença</SelectItem>
 
-                  {formData.attachment ? (
-                    <p className="text-sm font-medium text-foreground">
-                      📎 {formData.attachment.name}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Clique para anexar (atestado, justificativa, etc.)
-                    </p>
-                  )}
-                </div>
+            {/* Não aplicável */}
+            <SelectItem value="Nao aplicavel">Não aplicável</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
+      {/* Observações */}
+      <div className="space-y-2">
+        <Label>Observações</Label>
+        <Textarea
+          placeholder="Descreva observações adicionais..."
+          value={formData.reason}
+          onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+        />
+      </div>
 
-                    setFormData((prev) => ({
-                      ...prev,
-                      attachment: file,
-                    }));
-                  }}
-                />
-              </div>
+      {/* Anexar documento - só se tipo de ausência que exige */}
+      {['Ferias', 'Dispensa', 'Ausencia'].includes(formData.status) && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Anexar documento (opcional)
+          </label>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSaveAttendance}>
-                  Salvar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+          >
+            <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+
+            {formData.attachment ? (
+              <p className="text-sm font-medium text-foreground">
+                📎 {formData.attachment.name}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Clique para anexar (atestado, justificativa, etc.)
+              </p>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              setFormData((prev) => ({ ...prev, attachment: file }));
+            }}
+          />
+        </div>
+      )}
+
+      {/* Botões */}
+      <div className="flex justify-end gap-3 pt-4">
+        <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          Cancelar
+        </Button>
+        <Button onClick={handleSaveAttendance}>
+          Salvar
+        </Button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
       </div>
     </AppLayout>
   );
