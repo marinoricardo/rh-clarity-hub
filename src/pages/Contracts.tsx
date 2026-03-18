@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WorkerService } from "@/data/services/worker.service";
+import Swal from "sweetalert2";
 
 // const contractsData = [
 //   { id: 1, nomeCompleto: "Maria Santos", unidadeOrganica: "UN São Paulo", funcao: "Analista de RH", tipoContrato: "CLT", dataFim: "Indeterminado", estado: "Ativo" },
@@ -137,8 +138,27 @@ const Contracts = () => {
   // const expiringContracts = contractsData.filter(c => c.estado === "A Expirar");
   const expiringContracts = getExpiringContracts(filteredContracts, 30);
 
-  
 
+  const reencontratar = async (id: any) => {
+    try {
+      await workerService.recontratar(id);
+      Swal.fire({
+        icon: "success",
+        title: "Sucesso",
+        text: "Trabalhador reencontratado com sucesso.",
+        confirmButtonText: "OK",
+      }).then(() => {
+        fetchWorkers();
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro no registro",
+        text: error.message || "Ocorreu um erro ao registrar os documentos do trabalhador.",
+        confirmButtonText: "OK",
+      });
+    }
+  }
 
   return (
     <AppLayout title="Gestão de Contratos" subtitle="Controle de contratos dos trabalhadores">
@@ -264,7 +284,7 @@ const Contracts = () => {
                   <TableCell className="text-muted-foreground">{formatarDataHora(contract.employment_data.end_date)}</TableCell>
                   <TableCell>{getEstadoBadge(getContractStatus(contract.employment_data.hire_date, contract.employment_data.end_date))}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="destructive" size="sm">
+                    <Button variant="destructive" size="sm" onClick={() => reencontratar(contract.id)}>
                       Reencontratar
                     </Button>
                   </TableCell>

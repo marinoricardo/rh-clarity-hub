@@ -129,4 +129,14 @@ async index(active?: boolean) {
       throw new Error(error.response?.data?.message || "Failed to update steps");
     }
   }
+
+  // Recontratar worker
+  async recontratar(workerId: number | string) {
+    try {
+      const response = await api.post(`/worker-performances/recontratar`, { worker_id: workerId });
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to recontratar worker");
+    }
+  }
 }
