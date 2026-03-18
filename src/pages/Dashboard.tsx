@@ -204,7 +204,7 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                   <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                  {stat.change && (
+                  {/* {stat.change && (
                     <div className="flex items-center gap-1 mt-2">
                       {stat.changeType === "positive" && (
                         <TrendingUp className="w-4 h-4 text-success" />
@@ -223,7 +223,7 @@ const Dashboard = () => {
                         {stat.change}
                       </span>
                     </div>
-                  )}
+                  )} */}
                 </div>
                 <div className={`stats-card-icon ${stat.color}`}>
                   <stat.icon className="w-6 h-6" />

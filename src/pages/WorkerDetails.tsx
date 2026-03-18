@@ -552,7 +552,8 @@ const WorkerDetails = () => {
                 <TableBody>
                   {workerData.performances?.map((a: any, i: number) => (
                     <TableRow key={i} className="table-row">
-                      <TableCell className="font-medium">{a.perfomance_date}</TableCell>
+                      
+                      <TableCell className="font-medium">{new Date(a.perfomance_date).toLocaleDateString("pt-PT")}</TableCell>
                       <TableCell>{getStatusBadge(a.status)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm" onClick={() => window.open(a.attachament, "_blank")}>

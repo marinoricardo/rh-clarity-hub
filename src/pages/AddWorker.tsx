@@ -264,8 +264,7 @@ const departamentosFiltrados = commonData.departamentos.filter(
   const handleOtherChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOtherFile(e.target.files?.[0] || null);
   };
-
-
+  
 
   const handleSave = async () => {
     setIsLoading(true);
