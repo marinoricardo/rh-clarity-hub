@@ -153,6 +153,19 @@ const WorkerDetails = () => {
     }
   };
 
+  const getDocumentName = (field) => {
+    const map = {
+      nuit_document_url: 'Documento de NUIT',
+      identity_document_url: 'Documento de Identificação',
+      education_certificate_url: 'Certificado de Educação',
+      cv_url: 'Currículo',
+      other_certifications_url: 'Outros Certificados',
+      declaracao_documento_url: "Declaração Dados Bancarios"
+    };
+
+    return map[field] || field;
+  };
+
 
   if (loading) return <p className="text-center mt-10">Carregando dados do trabalhador...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -348,12 +361,12 @@ const WorkerDetails = () => {
                   <p className="text-foreground font-medium">{workerData.document_number}</p>
                 </div>
 
-                                <div>
+                <div>
                   <p className="text-sm text-muted-foreground">Banco</p>
                   <p className="text-foreground font-medium">{workerData.bank}</p>
                 </div>
 
-                                <div>
+                <div>
                   <p className="text-sm text-muted-foreground">NIB/IBAN</p>
                   <p className="text-foreground font-medium">{workerData.nib_iban}</p>
                 </div>
@@ -461,7 +474,8 @@ const WorkerDetails = () => {
               <div className="space-y-3">
                 {workerData.documents && Object.entries(workerData.documents).map(([key, url]: any, i) => {
                   if (key.endsWith("_url") && url) {
-                    const label = key.replace("_url", "").replace(/_/g, " ");
+                    const label = getDocumentName(key);
+                    // const label = key.replace("_url", "").replace(/_/g, " ");
                     return (
                       <div key={i} className="flex items-center justify-between bg-muted/50 rounded-lg p-4">
                         <div className="flex items-center gap-3">
@@ -552,7 +566,7 @@ const WorkerDetails = () => {
                 <TableBody>
                   {workerData.performances?.map((a: any, i: number) => (
                     <TableRow key={i} className="table-row">
-                      
+
                       <TableCell className="font-medium">{new Date(a.perfomance_date).toLocaleDateString("pt-PT")}</TableCell>
                       <TableCell>{getStatusBadge(a.status)}</TableCell>
                       <TableCell>

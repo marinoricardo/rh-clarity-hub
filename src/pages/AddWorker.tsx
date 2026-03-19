@@ -55,6 +55,7 @@ const AddWorker = () => {
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [otherFile, setOtherFile] = useState<File | null>(null);
+  const [declaracaoFile, setDeclaracaoFile] = useState<File | null>(null);
 
 
   const [personalData, setPersonalData] = useState({
@@ -95,8 +96,8 @@ const AddWorker = () => {
     salary: "",
     status: "activo",
     pelouro_id: "",
-  unidade_organica_id: "",
-  departamento_id: ""
+    unidade_organica_id: "",
+    departamento_id: ""
   });
 
   // Fetch worker data if in edit mode
@@ -114,13 +115,13 @@ const AddWorker = () => {
   }
 
   const unidadesFiltradas = commonData.unidade_organicas.filter(
-  (un) => String(un.pelouro_id) === companyData.pelouro_id
-);
+    (un) => String(un.pelouro_id) === companyData.pelouro_id
+  );
 
-const departamentosFiltrados = commonData.departamentos.filter(
-  (dept) =>
-    String(dept.unidade_organica_id) === companyData.unidade_organica_id
-);
+  const departamentosFiltrados = commonData.departamentos.filter(
+    (dept) =>
+      String(dept.unidade_organica_id) === companyData.unidade_organica_id
+  );
 
 
 
@@ -169,8 +170,8 @@ const departamentosFiltrados = commonData.departamentos.filter(
         salary: worker.employment_data?.salary || "",
         status: worker.employment_data?.status || "activo",
         pelouro_id: "",
-  unidade_organica_id: "",
-  departamento_id: ""
+        unidade_organica_id: "",
+        departamento_id: ""
       });
     } catch (err: any) {
       Swal.fire({
@@ -264,7 +265,12 @@ const departamentosFiltrados = commonData.departamentos.filter(
   const handleOtherChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOtherFile(e.target.files?.[0] || null);
   };
-  
+
+
+  const handleDeclaracaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDeclaracaoFile(e.target.files?.[0] || null);
+  };
+
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -276,6 +282,7 @@ const departamentosFiltrados = commonData.departamentos.filter(
       if (certificateFile) filesToUpload["education_certificate"] = certificateFile;
       if (cvFile) filesToUpload["cv"] = cvFile;
       if (otherFile) filesToUpload["other_certifications"] = otherFile;
+      if (otherFile) filesToUpload["declaracao_documento_url"] = declaracaoFile;
 
       if (Object.keys(filesToUpload).length > 0) {
         await workerService.uploadWorkerDocuments(workerId!, filesToUpload);
@@ -527,39 +534,39 @@ const departamentosFiltrados = commonData.departamentos.filter(
                   <Input id="funcao" placeholder="Digite a função" value={personalData.job_function} onChange={(e) => setPersonalData({ ...personalData, job_function: e.target.value })} />
                 </div>
 
-<div className="space-y-2">
-  <Label htmlFor="banco">Banco *</Label>
-  <Select
-    value={personalData.bank}
-    onValueChange={(e) =>
-      setPersonalData({ ...personalData, bank: e })
-    }
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Selecione o banco" />
-    </SelectTrigger>
+                <div className="space-y-2">
+                  <Label htmlFor="banco">Banco *</Label>
+                  <Select
+                    value={personalData.bank}
+                    onValueChange={(e) =>
+                      setPersonalData({ ...personalData, bank: e })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o banco" />
+                    </SelectTrigger>
 
-    <SelectContent>
-      <SelectItem value="Millennium BIM">Millennium BIM</SelectItem>
-      <SelectItem value="BCI">BCI</SelectItem>
-      <SelectItem value="Standard Bank">Standard Bank</SelectItem>
-      <SelectItem value="Absa Bank">Absa Bank</SelectItem>
-      <SelectItem value="Moza Banco">Moza Banco</SelectItem>
-      <SelectItem value="Banco Terra">Banco Terra</SelectItem>
-      <SelectItem value="Banco Único">Banco Único</SelectItem>
-      <SelectItem value="Banco BIG">Banco BIG</SelectItem>
-      <SelectItem value="Ecobank">Ecobank</SelectItem>
-      <SelectItem value="Access Bank">Access Bank</SelectItem>
-      <SelectItem value="UBA">UBA</SelectItem>
-      <SelectItem value="FNB">FNB</SelectItem>
-      <SelectItem value="Nedbank">Nedbank</SelectItem>
-      <SelectItem value="First Capital Bank">First Capital Bank</SelectItem>
-      <SelectItem value="BNI">Banco Nacional de Investimento (BNI)</SelectItem>
-      <SelectItem value="Socremo">Socremo Microbanco</SelectItem>
-      <SelectItem value="Letshego">Letshego Bank</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
+                    <SelectContent>
+                      <SelectItem value="Millennium BIM">Millennium BIM</SelectItem>
+                      <SelectItem value="BCI">BCI</SelectItem>
+                      <SelectItem value="Standard Bank">Standard Bank</SelectItem>
+                      <SelectItem value="Absa Bank">Absa Bank</SelectItem>
+                      <SelectItem value="Moza Banco">Moza Banco</SelectItem>
+                      <SelectItem value="Banco Terra">Banco Terra</SelectItem>
+                      <SelectItem value="Banco Único">Banco Único</SelectItem>
+                      <SelectItem value="Banco BIG">Banco BIG</SelectItem>
+                      <SelectItem value="Ecobank">Ecobank</SelectItem>
+                      <SelectItem value="Access Bank">Access Bank</SelectItem>
+                      <SelectItem value="UBA">UBA</SelectItem>
+                      <SelectItem value="FNB">FNB</SelectItem>
+                      <SelectItem value="Nedbank">Nedbank</SelectItem>
+                      <SelectItem value="First Capital Bank">First Capital Bank</SelectItem>
+                      <SelectItem value="BNI">Banco Nacional de Investimento (BNI)</SelectItem>
+                      <SelectItem value="Socremo">Socremo Microbanco</SelectItem>
+                      <SelectItem value="Letshego">Letshego Bank</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="nib_iban">NIB/IBAN *</Label>
@@ -621,103 +628,103 @@ const departamentosFiltrados = commonData.departamentos.filter(
                   </Select>
                 </div>
 
-<div className="space-y-2">
-  <Label htmlFor="department">Pelouro *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Pelouro *</Label>
 
-  <Select
-onValueChange={(pelouroId) => {
-    const pelouro = commonData.pelouros.find(
-      (p) => String(p.id) === pelouroId
-    );
+                  <Select
+                    onValueChange={(pelouroId) => {
+                      const pelouro = commonData.pelouros.find(
+                        (p) => String(p.id) === pelouroId
+                      );
 
-    setCompanyData({
-      ...companyData,
-      pelouro_id: pelouroId,
-      department: pelouro?.name || "",
-      unidade_organica_id: "",
-      organic_unit: "",
-      departamento_id: "",
-      sector: "",
-    });
-  }}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Selecione o pelouro" />
-    </SelectTrigger>
+                      setCompanyData({
+                        ...companyData,
+                        pelouro_id: pelouroId,
+                        department: pelouro?.name || "",
+                        unidade_organica_id: "",
+                        organic_unit: "",
+                        departamento_id: "",
+                        sector: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o pelouro" />
+                    </SelectTrigger>
 
-    <SelectContent>
-      {commonData.pelouros.map((pelouro) => (
-        <SelectItem key={pelouro.id} value={String(pelouro.id)}>
-          {pelouro.name}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+                    <SelectContent>
+                      {commonData.pelouros.map((pelouro) => (
+                        <SelectItem key={pelouro.id} value={String(pelouro.id)}>
+                          {pelouro.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-<div className="space-y-2">
-  <Label htmlFor="organic_unit">Unidade Orgânica *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="organic_unit">Unidade Orgânica *</Label>
 
-  <Select
-  value={companyData.unidade_organica_id}
-  onValueChange={(unidadeId) => {
-    const unidade = unidadesFiltradas.find(
-      (u) => String(u.id) === unidadeId
-    );
+                  <Select
+                    value={companyData.unidade_organica_id}
+                    onValueChange={(unidadeId) => {
+                      const unidade = unidadesFiltradas.find(
+                        (u) => String(u.id) === unidadeId
+                      );
 
-    setCompanyData({
-      ...companyData,
-      unidade_organica_id: unidadeId,
-      organic_unit: unidade?.name || "",
-      departamento_id: "",
-      sector: "",
-    });
-  }}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Selecione a unidade orgânica" />
-    </SelectTrigger>
+                      setCompanyData({
+                        ...companyData,
+                        unidade_organica_id: unidadeId,
+                        organic_unit: unidade?.name || "",
+                        departamento_id: "",
+                        sector: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a unidade orgânica" />
+                    </SelectTrigger>
 
-    <SelectContent>
-      {unidadesFiltradas.map((un) => (
-        <SelectItem key={un.id} value={String(un.id)}>
-          {un.name}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+                    <SelectContent>
+                      {unidadesFiltradas.map((un) => (
+                        <SelectItem key={un.id} value={String(un.id)}>
+                          {un.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-<div className="space-y-2">
-  <Label htmlFor="sector">Departamento *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="sector">Departamento *</Label>
 
-  <Select
-    value={companyData.departamento_id}
-  onValueChange={(departamentoId) => {
-    const departamento = departamentosFiltrados.find(
-      (d) => String(d.id) === departamentoId
-    );
+                  <Select
+                    value={companyData.departamento_id}
+                    onValueChange={(departamentoId) => {
+                      const departamento = departamentosFiltrados.find(
+                        (d) => String(d.id) === departamentoId
+                      );
 
-    setCompanyData({
-      ...companyData,
-      departamento_id: departamentoId,
-      sector: departamento?.name || "",
-    });
-  }}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Selecione o departamento" />
-    </SelectTrigger>
+                      setCompanyData({
+                        ...companyData,
+                        departamento_id: departamentoId,
+                        sector: departamento?.name || "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o departamento" />
+                    </SelectTrigger>
 
-    <SelectContent>
-      {departamentosFiltrados.map((dept) => (
-        <SelectItem key={dept.id} value={String(dept.id)}>
-          {dept.name}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+                    <SelectContent>
+                      {departamentosFiltrados.map((dept) => (
+                        <SelectItem key={dept.id} value={String(dept.id)}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
 
                 <div className="space-y-2">
@@ -943,7 +950,7 @@ onValueChange={(pelouroId) => {
                   </label>
                 </div>
 
-                
+
                 {/* Declaracao/Dados Bancarios */}
                 <div className="border border-border rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -955,7 +962,7 @@ onValueChange={(pelouroId) => {
                     type="file"
                     id="other-upload"
                     className="hidden"
-                    onChange={handleOtherChange}
+                    onChange={handleDeclaracaoChange}
                   />
 
                   <label
@@ -964,9 +971,9 @@ onValueChange={(pelouroId) => {
                   >
                     <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
 
-                    {otherFile ? (
+                    {declaracaoFile ? (
                       <>
-                        <p className="text-sm font-medium text-foreground">{otherFile.name}</p>
+                        <p className="text-sm font-medium text-foreground">{declaracaoFile.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Clique para trocar o ficheiro
                         </p>
