@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, FileText, Eye, Trash2, AlertTriangle, Download, MoreHorizontal } from "lucide-react";
+import { Search, FileText, Eye, Trash2, AlertTriangle, Download, MoreHorizontal, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +43,7 @@ const Contracts = () => {
   const [workersData, setWorkersData] = useState<any[]>([]); // agora dinâmico
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [recontractingId, setRecontractingId] = useState<number | null>(null);
   const workerService = new WorkerService();
 
   useEffect(() => {
@@ -140,6 +141,7 @@ const Contracts = () => {
 
 
   const reencontratar = async (id: any) => {
+    setRecontractingId(id);
     try {
       await workerService.recontratar(id);
       Swal.fire({
@@ -148,9 +150,11 @@ const Contracts = () => {
         text: "Trabalhador reencontratado com sucesso.",
         confirmButtonText: "OK",
       }).then(() => {
+        setRecontractingId(null);
         fetchWorkers();
       });
     } catch (error: any) {
+      setRecontractingId(null);
       Swal.fire({
         icon: "error",
         title: "Erro no registro",
@@ -284,8 +288,16 @@ const Contracts = () => {
                   <TableCell className="text-muted-foreground">{formatarDataHora(contract.employment_data.end_date)}</TableCell>
                   <TableCell>{getEstadoBadge(getContractStatus(contract.employment_data.hire_date, contract.employment_data.end_date))}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="destructive" size="sm" onClick={() => reencontratar(contract.id)}>
-                      Reencontratar
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => reencontratar(contract.id)}
+                      disabled={recontractingId === contract.id}
+                    >
+                      {recontractingId === contract.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : null}
+                      {recontractingId === contract.id ? "Processando..." : "Reencontratar"}
                     </Button>
                   </TableCell>
                 </TableRow>

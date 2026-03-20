@@ -100,6 +100,11 @@ const AddWorker = () => {
     departamento_id: ""
   });
 
+  const [personalErrors, setPersonalErrors] = useState<Record<string,string>>({});
+
+  const getFieldClass = (field: string) =>
+    personalErrors[field] ? "border-red-500 ring-1 ring-red-500" : "";
+
   // Fetch worker data if in edit mode
   useEffect(() => {
     fetchAllCommonData();
@@ -190,25 +195,32 @@ const AddWorker = () => {
     setIsLoading(true);
 
     if (currentStep === 1) {
-      console.log("isEditMode:", isEditMode, "workerId:", workerId);
+      const errors: Record<string,string> = {};
+      if (!personalData.full_name.trim()) errors.full_name = "Nome completo é obrigatório.";
+      if (!personalData.date_of_birth.trim()) errors.date_of_birth = "Data de nascimento é obrigatória.";
+      if (!personalData.tax_number.trim()) errors.tax_number = "NUIT é obrigatório.";
+      if (!personalData.job_function.trim()) errors.job_function = "Função é obrigatória.";
+
+      if (Object.keys(errors).length > 0) {
+        setPersonalErrors(errors);
+        Swal.fire({ icon: "warning", title: "Campos obrigatórios", text: "Preencha os campos obrigatórios antes de seguir.", confirmButtonText: "OK" });
+        setIsLoading(false);
+        return;
+      }
+
+      setPersonalErrors({});
+
       try {
         if (isEditMode && workerId) {
-          // Update existing worker
           await workerService.update(workerId as number, personalData);
-          setCurrentStep(currentStep + 1);
+          setCurrentStep((prev) => prev + 1);
         } else {
-          // Create new worker
           const response = await workerService.store(personalData);
           setWorkerId(response.id);
-          setCurrentStep(currentStep + 1);
+          setCurrentStep((prev) => prev + 1);
         }
       } catch (err: any) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro no registro",
-          text: err.message || "Ocorreu um erro ao registrar os dados pessoais.",
-          confirmButtonText: "OK",
-        });
+        Swal.fire({ icon: "error", title: "Erro no registro", text: err.message || "Ocorreu um erro ao registrar os dados pessoais.", confirmButtonText: "OK" });
       } finally {
         setIsLoading(false);
       }
@@ -216,16 +228,17 @@ const AddWorker = () => {
     }
 
     if (currentStep === 2) {
+      if (!companyData.organic_unit || !companyData.department || !companyData.contract_type || !companyData.hire_date) {
+        Swal.fire({ icon: "warning", title: "Campos obrigatórios", text: "Preencha todos os campos empresariais essenciais antes de prosseguir.", confirmButtonText: "OK" });
+        setIsLoading(false);
+        return;
+      }
+
       try {
         await workerService.storeCompanyData(workerId!, companyData);
-        setCurrentStep(currentStep + 1);
+        setCurrentStep((prev) => prev + 1);
       } catch (err: any) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro no registro",
-          text: err.message || "Ocorreu um erro ao registrar os dados empresariais.",
-          confirmButtonText: "OK",
-        });
+        Swal.fire({ icon: "error", title: "Erro no registro", text: err.message || "Ocorreu um erro ao registrar os dados empresariais.", confirmButtonText: "OK" });
       } finally {
         setIsLoading(false);
       }
@@ -274,26 +287,29 @@ const AddWorker = () => {
 
   const handleSave = async () => {
     setIsLoading(true);
+
+    if (!nuitFile || !idFile || !declaracaoFile) {
+      Swal.fire({ icon: "warning", title: "Documentos obrigatórios", text: "BI, NUIT e autorização devem ser enviados para concluir o cadastro.", confirmButtonText: "OK" });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const filesToUpload: Record<string, File> = {};
 
-      if (nuitFile) filesToUpload["nuit_document"] = nuitFile;
-      if (idFile) filesToUpload["identity_document"] = idFile;
+      filesToUpload["nuit_document"] = nuitFile;
+      filesToUpload["identity_document"] = idFile;
       if (certificateFile) filesToUpload["education_certificate"] = certificateFile;
       if (cvFile) filesToUpload["cv"] = cvFile;
       if (otherFile) filesToUpload["other_certifications"] = otherFile;
-      if (otherFile) filesToUpload["declaracao_documento_url"] = declaracaoFile;
+      filesToUpload["declaracao_documento_url"] = declaracaoFile;
 
-      if (Object.keys(filesToUpload).length > 0) {
-        await workerService.uploadWorkerDocuments(workerId!, filesToUpload);
-      }
+      await workerService.uploadWorkerDocuments(workerId!, filesToUpload);
 
       Swal.fire({
         icon: "success",
         title: isEditMode ? "Trabalhador actualizado!" : "Trabalhador adicionado!",
-        text: isEditMode
-          ? "Os dados foram actualizados com sucesso."
-          : "O cadastro foi realizado com sucesso.",
+        text: isEditMode ? "Os dados foram actualizados com sucesso." : "O cadastro foi realizado com sucesso.",
         confirmButtonText: "OK",
       });
 
@@ -396,17 +412,38 @@ const AddWorker = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
-                  <Input id="nome" placeholder="Digite o nome completo" value={personalData.full_name} onChange={(e) => setPersonalData({ ...personalData, full_name: e.target.value })} />
+                  <Input
+                    id="nome"
+                    placeholder="Digite o nome completo"
+                    value={personalData.full_name}
+                    onChange={(e) => setPersonalData({ ...personalData, full_name: e.target.value })}
+                    className={getFieldClass("full_name")}
+                  />
+                  {personalErrors.full_name && <p className="text-xs text-red-600">{personalErrors.full_name}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
-                  <Input id="dataNascimento" type="date" value={personalData.date_of_birth} onChange={(e) => setPersonalData({ ...personalData, date_of_birth: e.target.value })} />
+                  <Input
+                    id="dataNascimento"
+                    type="date"
+                    value={personalData.date_of_birth}
+                    onChange={(e) => setPersonalData({ ...personalData, date_of_birth: e.target.value })}
+                    className={getFieldClass("date_of_birth")}
+                  />
+                  {personalErrors.date_of_birth && <p className="text-xs text-red-600">{personalErrors.date_of_birth}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="nuit">NUIT *</Label>
-                  <Input id="nuit" placeholder="Número Único de Identificação" value={personalData.tax_number} onChange={(e) => setPersonalData({ ...personalData, tax_number: e.target.value })} />
+                  <Input
+                    id="nuit"
+                    placeholder="Número Único de Identificação"
+                    value={personalData.tax_number}
+                    onChange={(e) => setPersonalData({ ...personalData, tax_number: e.target.value })}
+                    className={getFieldClass("tax_number")}
+                  />
+                  {personalErrors.tax_number && <p className="text-xs text-red-600">{personalErrors.tax_number}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -960,13 +997,13 @@ const AddWorker = () => {
 
                   <input
                     type="file"
-                    id="other-upload"
+                    id="declaracao-upload"
                     className="hidden"
                     onChange={handleDeclaracaoChange}
                   />
 
                   <label
-                    htmlFor="other-upload"
+                    htmlFor="declaracao-upload"
                     className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer block w-full"
                   >
                     <Upload className="w-6 h-6 text-primary mx-auto mb-2" />
